@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -22,7 +26,7 @@
         .btn-exportar:hover { background: #0097a7; }
         
         /* ESTILO DA FOLHA DO ORÇAMENTO */
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
+        #area-orcamento { background: #ffffff; padding: 35px; margin-top: 15px; display: none; color: #333; width: 100%; max-width: 540px; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
@@ -36,14 +40,6 @@
         .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
-
-        /* REGRAS DE IMPRESSÃO AUTOMÁTICA EM PDF */
-        @media print {
-            body { background: white; padding: 0; }
-            .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
-            #bloco-resultado, #area-orcamento { display: block !important; border: none !important; padding: 0 !important; width: 100% !important; }
-            #area-orcamento img { max-height: 55px !important; width: auto !important; display: block !important; }
-        }
     </style>
 </head>
 <body>
@@ -112,12 +108,12 @@
 
     <button class="btn-principal" onclick="gerarPropostaCompleta()">Gerar Orçamento</button>
 
-    <!-- ÁREA DE PREVIEW E EXPORTAÇÃO DIRETA -->
+    <!-- ÁREA DE PREVIEW E EXPORTAÇÃO -->
     <div id="bloco-resultado" style="display: none;">
         <div id="area-orcamento">
             <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="exportarImprimir()">Exportar Orçamento Agora</button>
+        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Gerar JPEG em Nova Aba</button>
     </div>
 </div>
 
@@ -125,12 +121,16 @@
 let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
+// CORREÇÃO: Garante o carregamento correto transformando a imagem em dados inline estáveis
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files;
+    const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { 
-            logoClienteBase64 = e.target.result; 
+            logoClienteBase64 = e.target.result;
+            // Atualiza dinamicamente se o orçamento já estiver visível
+            const imgPreview = document.getElementById("img-cliente-preview");
+            if(imgPreview) imgPreview.src = logoClienteBase64;
         };
         reader.readAsDataURL(arquivo);
     }
@@ -152,19 +152,15 @@ function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
     clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
     bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
-    
     const prodSel = document.getElementById("produto");
     prodSel.innerHTML = '';
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
-    
     const tamSel = document.getElementById("tamanho");
     tamSel.innerHTML = '';
     bancoDados.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
-    
     const papelSel = document.getElementById("papel");
     papelSel.innerHTML = '';
     bancoDados.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
-    
     const cordaoSel = document.getElementById("cordao");
     cordaoSel.innerHTML = '';
     bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
@@ -226,7 +222,9 @@ function gerarPropostaCompleta() {
     dataValidade.setDate(dataHoje.getDate() + 10);
 
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    let imgClienteTag = logoClienteBase64 ? `<span>Cliente:</span><img src="${logoClienteBase64}">` : '<span>Cliente: [Sem Logo Anexa]</span>';
+    
+    // RESOLUÇÃO: Tag HTML estruturada para forçar a renderização imediata da imagem inline
+    let imgClienteTag = logoClienteBase64 ? `<span>Cliente:</span><img id="img-cliente-preview" src="${logoClienteBase64}">` : '<span>Cliente: [Sem Logo Anexa]</span>';
 
     let htmlOrcamento = `
         <div class="logos-header">
@@ -278,8 +276,39 @@ function gerarPropostaCompleta() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarImprimir() {
-    window.print();
+function abrirImagemNovaAba() {
+    const alvo = document.getElementById("area-orcamento");
+    
+    // CORREÇÃO DEFINITIVA: Converte e abre diretamente na nova aba com instruções de salvamento
+    htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff', style: { display: 'block' } })
+        .then(function (dataUrl) {
+            const novaAba = window.open();
+            if (novaAba) {
+                novaAba.document.write(`
+                    <html lang="pt-BR">
+                    <head>
+                        <title>Orçamento Comercial - Imagem</title>
+                        <style>
+                            body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
+                            .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                            img { max-width: 90%; max-height: 80vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+                        <img src="${dataUrl}" />
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            } else {
+                alert("O seu navegador bloqueou a abertura da nova aba. Ative as permissões de pop-up para este site.");
+            }
+        })
+        .catch(function (error) {
+            alert('Erro ao processar imagem da logo. Certifique-se de usar arquivos JPG ou PNG válidos.');
+            console.error('Erro de conversão:', error);
+        });
 }
 </script>
 </body>

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novo Orçamento Automatizado</title>
+    <!-- IMPORTANTE: Esta linha adiciona o script que transforma o layout em imagem JPG -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -13,13 +16,24 @@
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
         .field { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
         input:focus, select:focus { border-color: #ba1cb3; }
         .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #9e1497; }
         .btn-exportar { background: #ba1cb3; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; }
         .btn-exportar:hover { background: #9e1497; }
-        textarea { height: 120px; resize: none; }
+        
+        /* ESTILO DO RECIBO DE ORÇAMENTO (O QUE VIRA IMAGEM) */
+        #area-orcamento { 
+            background: #ffffff; 
+            border: 2px dashed #ba1cb3; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-top: 15px; 
+            display: none; /* Só aparece quando o usuário clica em Gerar */
+        }
+        .recibo-linha { font-size: 13px; margin-bottom: 6px; color: #333; line-height: 1.4; }
+        .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; margin-top: 12px; border-top: 1px solid #eee; padding-top: 8px; }
     </style>
 </head>
 <body>
@@ -119,19 +133,20 @@
 
     <button class="btn-principal" onclick="calcularOrcamento()">Gerar Orçamento</button>
 
-    <!-- RESULTADO DO ORÇAMENTO -->
-    <h2>Orçamento</h2>
-    <div class="field">
-        <textarea id="resultado" readonly placeholder="Descrição do Produto"></textarea>
+    <!-- ÁREA DE VISUALIZAÇÃO DO ORÇAMENTO -->
+    <div id="bloco-resultado" style="display: none;">
+        <h2>Orçamento Gerado</h2>
+        <div id="area-orcamento">
+            <!-- Os dados formatados entram aqui via JavaScript para virarem imagem -->
+        </div>
+        <button class="btn-exportar" onclick="exportarJpg()">Exportar em JPG</button>
     </div>
-    <button class="btn-exportar" onclick="exportarTxt()">Exportar</button>
     <div style="clear: both;"></div>
 </div>
 
 <script>
 let bancoDados = {};
 
-// Carrega a fonte de dados do arquivo JSON externo ao abrir a página
 window.onload = function() {
     fetch('dados.json')
         .then(response => response.json())
@@ -143,17 +158,14 @@ window.onload = function() {
 };
 
 function carregarMenus() {
-    // Alimenta Clientes
     const clienteSel = document.getElementById("selectCliente");
     bancoDados.clientes.forEach((c, index) => {
         clienteSel.options[clienteSel.options.length] = new Option(c.nome, index);
     });
 
-    // Alimenta Produtos
     const prodSel = document.getElementById("produto");
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
 
-    // Alimenta Tamanhos
     const tamSel = document.getElementById("tamanho");
     bancoDados.tamanhos.forEach(t => {
         let opt = new Option(t.nome, t.nome);
@@ -161,7 +173,6 @@ function carregarMenus() {
         tamSel.add(opt);
     });
 
-    // Alimenta Papéis
     const papelSel = document.getElementById("papel");
     bancoDados.papeis.forEach(p => {
         let opt = new Option(p.nome, p.nome);
@@ -169,7 +180,6 @@ function carregarMenus() {
         papelSel.add(opt);
     });
 
-    // Alimenta Cordões
     const cordaoSel = document.getElementById("cordao");
     bancoDados.cordoes.forEach(c => {
         let opt = new Option(c.nome, c.nome);
@@ -198,39 +208,55 @@ function calcularOrcamento() {
     custoUnitario += parseFloat(papelSelect.options[papelSelect.selectedIndex].dataset.preco || 0);
     custoUnitario += parseFloat(cordaoSelect.options[cordaoSelect.selectedIndex].dataset.preco || 0);
     
-    // Calcula adicionais dinâmicos mapeados do objeto valoresAcabamento do JSON
     const tabelaAcabamentos = bancoDados.valoresAcabamento;
-    if(document.getElementById("plastificacao").value === "Sim") custoUnitario += tabelaAcabamentos.plastificacao;
-    if(document.getElementById("laminacao").value === "Sim") custoUnitario += tabelaAcabamentos.laminacao;
-    if(document.getElementById("ilhos").value === "Sim") custoUnitario += tabelaAcabamentos.ilhos;
-    if(document.getElementById("verniz").value === "Sim") custoUnitario += tabelaAcabamentos.verniz;
-    if(document.getElementById("hotstamping").value === "Sim") custoUnitario += tabelaAcabamentos.hotstamping;
-    if(document.getElementById("gofragem").value !== "Não") custoUnitario += tabelaAcabamentos.gofragem;
+    let acabamentosAtivos = [];
+    if(document.getElementById("plastificacao").value === "Sim") { custoUnitario += tabelaAcabamentos.plastificacao; acabamentosAtivos.push("Plastificação"); }
+    if(document.getElementById("laminacao").value === "Sim") { custoUnitario += tabelaAcabamentos.laminacao; acabamentosAtivos.push("Laminação BOPP"); }
+    if(document.getElementById("ilhos").value === "Sim") { custoUnitario += tabelaAcabamentos.ilhos; acabamentosAtivos.push("Ilhós"); }
+    if(document.getElementById("verniz").value === "Sim") { custoUnitario += tabelaAcabamentos.verniz; acabamentosAtivos.push("Verniz Local"); }
+    if(document.getElementById("hotstamping").value === "Sim") { custoUnitario += tabelaAcabamentos.hotstamping; acabamentosAtivos.push("Hot Stamping"); }
+    if(document.getElementById("gofragem").value !== "Não") { custoUnitario += tabelaAcabamentos.gofragem; acabamentosAtivos.push("Gofragem ("+document.getElementById("gofragem").value+")"); }
 
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    let textoOrcamento = `ORÇAMENTO COMERCIAL\n`;
-    textoOrcamento += `Cliente: ${document.getElementById("nomeCliente").value || 'Não informado'}\n`;
-    textoOrcamento += `Vendedor: ${document.getElementById("nomeVendedor").value || 'Não informado'}\n`;
-    textoOrcamento += `-------------------------------------------\n`;
-    textoOrcamento += `Produto: ${document.getElementById("produto").value} ${tamSelect.value}\n`;
-    textoOrcamento += `Papel: ${papelSelect.value} ${document.getElementById("gramatura").value} | Cores: ${document.getElementById("cores").value}\n`;
-    textoOrcamento += `Quantidade: ${qtd} unidades\n`;
-    textoOrcamento += `Valor Unitário Estimado: R$ ${custoUnitario.toFixed(2)}\n`;
-    textoOrcamento += `VALOR TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}`;
+    // Montando o layout visual do orçamento em HTML limpo dentro da caixa de preview
+    let htmlOrcamento = `
+        <div class="recibo-linha" style="font-weight: bold; text-align: center; font-size: 15px; margin-bottom: 15px; color: #ba1cb3;">PROPOSTA COMERCIAL DE EMBALAGENS</div>
+        <div class="recibo-linha"><strong>Cliente:</strong> ${document.getElementById("nomeCliente").value || 'Não informado'}</div>
+        <div class="recibo-linha"><strong>E-mail:</strong> ${document.getElementById("emailCliente").value || 'Não informado'}</div>
+        <div class="recibo-linha"><strong>Telefone:</strong> ${document.getElementById("telCliente").value || 'Não informado'}</div>
+        <div class="recibo-linha" style="border-bottom: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="recibo-linha"><strong>Produto:</strong> ${document.getElementById("produto").value} - Tam: ${tamSelect.value}</div>
+        <div class="recibo-linha"><strong>Especificações:</strong> Papel ${papelSelect.value} ${document.getElementById("gramatura").value} | Cores: ${document.getElementById("cores").value}</div>
+        <div class="recibo-linha"><strong>Cordão:</strong> ${cordaoSelect.value}</div>
+        <div class="recibo-linha"><strong>Acabamentos:</strong> ${acabamentosAtivos.length > 0 ? acabamentosAtivos.join(", ") : "Nenhum"}</div>
+        <div class="recibo-linha" style="border-bottom: 1px dashed #ccc; margin: 10px 0;"></div>
+        <div class="recibo-linha"><strong>Quantidade:</strong> ${qtd} unidades</div>
+        <div class="recibo-linha"><strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
+        <div class="recibo-total">VALOR TOTAL: R$ ${valorTotal.toFixed(2)}</div>
+        <div class="recibo-linha" style="margin-top: 15px; font-size: 11px; color: #777; text-align: center;">Atendido por: ${document.getElementById("nomeVendedor").value || 'Equipe Comercial'}</div>
+    `;
 
-    document.getElementById("resultado").value = textoOrcamento;
+    document.getElementById("area-orcamento").innerHTML = htmlOrcamento;
+    document.getElementById("area-orcamento").style.display = "block";
+    document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarTxt() {
-    const texto = document.getElementById("resultado").value;
-    if(!texto) return alert("Gere um orçamento primeiro!");
-    const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.txt`;
-    link.click();
+function exportarJpg() {
+    const alvo = document.getElementById("area-orcamento");
+    
+    // Transforma a div HTML em um Canvas de imagem
+    html2canvas(alvo, { scale: 2 }).then(canvas => {
+        // Converte o canvas para arquivo de imagem JPG
+        const imagemUrl = canvas.toDataURL("image/jpeg", 0.9);
+        
+        // Cria um link temporário oculto para disparar o download automático
+        const link = document.createElement("a");
+        link.href = imagemUrl;
+        link.download = `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.jpg`;
+        link.click();
+    });
 }
 </script>
 </body>

@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
-    
-    <!-- BIBLIOTECA QUE FAZ O DOWNLOAD AUTOMÁTICO EM PDF SEM TRAVAR O NAVEGADOR -->
-    <script src="https://cloudflare.com"></script>
-    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -25,11 +21,11 @@
         .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #0097a7; }
         
-        /* ESTILO INTERNO DA FOLHA DE PROPOSTA (PREPARADA PARA PDF A4 COURIER/ARIAL) */
-        #area-orcamento { background: #ffffff; padding: 35px; margin-top: 15px; display: none; color: #333; }
+        /* ESTILO DA FOLHA DO ORÇAMENTO */
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; }
-        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; }
+        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
         .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; }
         .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
@@ -39,6 +35,14 @@
         .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
+
+        /* REGRAS DE IMPRESSÃO AUTOMÁTICA EM PDF */
+        @media print {
+            body { background: white; padding: 0; }
+            .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
+            #bloco-resultado, #area-orcamento { display: block !important; border: none !important; padding: 0 !important; width: 100% !important; }
+            #area-orcamento img { max-height: 55px !important; width: auto !important; display: block !important; }
+        }
     </style>
 </head>
 <body>
@@ -112,7 +116,7 @@
         <div id="area-orcamento">
             <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="exportarPdfDireto()">Exportar Orçamento e Download Automático</button>
+        <button class="btn-exportar" onclick="exportarImprimir()">Exportar Orçamento Agora</button>
     </div>
 </div>
 
@@ -120,11 +124,14 @@
 let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
+// Resolve o erro da imagem sumir convertendo o arquivo para dados binários puros na memória
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files;
+    const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
-        reader.onload = function(e) { logoClienteBase64 = e.target.result; };
+        reader.onload = function(e) { 
+            logoClienteBase64 = e.target.result; 
+        };
         reader.readAsDataURL(arquivo);
     }
 }
@@ -169,15 +176,15 @@ function selecionarCliente() {
         const cliente = bancoDados.clientes[idx];
         document.getElementById("nomeCliente").value = cliente.nome;
         document.getElementById("emailCliente").value = cliente.email;
-        document.getElementById("telCliente").value = cliente.telefone;
+        document.getElementById("telCliente").value = cliente.telephone || cliente.telefone || '';
     }
 }
 
-function salvarClienteAutomatico(nome, email, telephone) {
+function salvarClienteAutomatico(nome, email, telefone) {
     if (!nome) return;
     const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
     if (!jaExiste) {
-        const novoCliente = { nome, email, telephone };
+        const novoCliente = { nome, email, telephone: telefone };
         let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
         historicoLocal.push(novoCliente);
         localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
@@ -214,10 +221,9 @@ function gerarPropostaCompleta() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    // CÁLCULO DINÂMICO DE DATAS (EMISSÃO E VALIDADE)
     const dataHoje = new Date();
     const dataValidade = new Date();
-    dataValidade.setDate(dataHoje.getDate() + 10); // Adiciona exatamente 10 dias de validade
+    dataValidade.setDate(dataHoje.getDate() + 10);
 
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
     let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Sem Logo Anexa</span>';
@@ -270,21 +276,9 @@ function gerarPropostaCompleta() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarPdfDireto() {
-    const alvo = document.getElementById("area-orcamento");
-    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
-    
-    // Configurações de margem e tamanho para o PDF baixar perfeitamente formatado
-    const configuracao = {
-        margin:       12,
-        filename:     `Orcamento_${nomeCliente}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    // Executa a conversão nativa do HTML e força o download automático
-    html2pdf().set(configuracao).from(alvo).save();
+function exportarImprimir() {
+    // Comando nativo e blindado contra erros: abre instantaneamente a janela de salvamento e preserva as imagens carregadas
+    window.print();
 }
 </script>
 </body>

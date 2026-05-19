@@ -144,7 +144,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4 } }
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.4 } }
 };
 
 window.onload = function() {
@@ -181,12 +181,17 @@ function calcularValoresAtuais() {
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     
-    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0) + parseFloat(cordaoSelecionado.dataset.preco || 0);
-    if(database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
-    if(temFuroLaco) custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
-    if(temIlhos) custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
+    let custoUnitario = 0;
+    if (itemSelecionado) custoUnitario += parseFloat(itemSelecionado.dataset.preco || 0);
+    if (cordaoSelecionado) custoUnitario += parseFloat(cordaoSelecionado.dataset.preco || 0);
     
-    const qtd = parseInt(document.getElementById("qtd").value);
+    if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+        custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
+    }
+    if(temFuroLaco && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
+    if(temIlhos && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
+    
+    const qtd = parseInt(document.getElementById("qtd").value) || 500;
     return { custoUnitario, qtd, total: custoUnitario * qtd, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
 }
 
@@ -197,8 +202,11 @@ function gerarVisualizacaoTela() {
     if(!nome || !tel || !email) { alert("Erro: Nome, Telefone e E-mail do cliente são obrigatórios!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
+    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
+    const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
+
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong>Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
@@ -234,12 +242,14 @@ function abrirImagemNovaAba() {
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + tel + "  |  E-mail: " + email, 50, 203);
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
-    let detalhesTexto = dadosComerciais.itemSelecionado.dataset.detalhes;
+    
+    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
+    let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
     let partes = detalhesTexto.split(" | ");
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
     if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
@@ -259,7 +269,7 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = tel.replace(/\D/g, "");
-        const linkWhatsApp = `https://whatsapp.com{telefoneLimpo}`;
+        const linkWhatsApp = `https://api.whatsapp.com/send?phone=55{telefoneLimpo}`;
 
         novaAba.document.write(`
             <html>
@@ -279,7 +289,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="${https://api.whatsapp.com/send?phone=55}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="${linkWhatsApp}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

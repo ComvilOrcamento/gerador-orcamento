@@ -57,16 +57,9 @@
     <!-- DADOS DO CLIENTE -->
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
-        <label>Buscar Cliente Cadastrado</label>
-        <select id="selectCliente" onchange="selecionarCliente()">
-            <option value="">-- Selecione um cliente --</option>
-        </select>
-    </div>
-    <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
         <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
-    <!-- ALTERAÇÃO: Posições de Telefone e E-mail invertidas no formulário -->
     <div class="row">
         <div class="field"><label>Telefone *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" required></div>
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
@@ -102,7 +95,6 @@
         <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
     </div>
 
-    <!-- ALTERAÇÃO: Adicionado o asterisco e o placeholder indicando obrigatoriedade -->
     <div class="field">
         <label>Nome do vendedor *</label>
         <input type="text" id="nomeVendedor" placeholder="Seu nome (Obrigatório)" required>
@@ -120,8 +112,11 @@
 </div>
 
 <script>
-let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
+let bancoDados = { produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
+
+// Limpa de vez qualquer rastro de clientes antigos salvos na máquina local
+localStorage.removeItem('clientesSalvosAutomático');
 
 function carregarLogoCliente(event) {
     const arquivo = event.target.files;
@@ -141,17 +136,12 @@ window.onload = function() {
         .then(response => response.json())
         .then(data => {
             bancoDados = data;
-            const clientesLocais = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
-            bancoDados.clientes = [...bancoDados.clientes, ...clientesLocais];
             carregarMenus();
         })
         .catch(error => console.error("Erro ao carregar banco de dados:", error));
 };
 
 function carregarMenus() {
-    const clienteSel = document.getElementById("selectCliente");
-    clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
-    bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
     const prodSel = document.getElementById("produto");
     prodSel.innerHTML = '';
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
@@ -166,42 +156,16 @@ function carregarMenus() {
     bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
 }
 
-function selecionarCliente() {
-    const idx = document.getElementById("selectCliente").value;
-    if(idx !== "") {
-        const cliente = bancoDados.clientes[idx];
-        document.getElementById("nomeCliente").value = cliente.nome;
-        document.getElementById("emailCliente").value = cliente.email;
-        document.getElementById("telCliente").value = cliente.telephone || cliente.telefone || '';
-    }
-}
-
-function salvarClienteAutomatico(nome, email, telefone) {
-    if (!nome) return;
-    const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
-    if (!jaExiste) {
-        const novoCliente = { nome, email, telephone: telephone };
-        let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
-        historicoLocal.push(novoCliente);
-        localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
-        bancoDados.clientes.push(novoCliente);
-        carregarMenus();
-    }
-}
-
 function gerarPropostaCompleta() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim();
     
-    // ALTERAÇÃO: Validação estrita incluindo a verificação do nome do vendedor
     if(!nome || !tel || !vendedor) { 
         alert("Erro: Nome do cliente, Telefone e Nome do vendedor são campos obrigatórios!"); 
         return; 
     }
-    
-    salvarClienteAutomatico(nome, email, tel);
     
     const tamSelect = document.getElementById("tamanho");
     const papelSelect = document.getElementById("papel");
@@ -282,7 +246,6 @@ function gerarPropostaCompleta() {
 
 function abrirImagemNovaAba() {
     const alvo = document.getElementById("area-orcamento");
-    
     const novaAba = window.open("", "_blank");
     if (!novaAba) {
         alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações do navegador.");

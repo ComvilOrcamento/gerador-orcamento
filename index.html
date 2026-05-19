@@ -29,7 +29,6 @@
         .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
         
-        /* BOTÃO DE E-MAIL (MODIFICADO: TOM VERDE CORPORATIVO PARA DESTACAR AÇÃO) */
         .btn-email { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
         .btn-email:hover { background: #128C7E; }
         
@@ -131,7 +130,6 @@
         
         <div class="botoes-container">
             <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
-            <!-- BOTÃO ALTERADO: Executa a rotina profissional de e-mail -->
             <button class="btn-email" onclick="enviarOrcamentoEmail()">Enviar Orçamento por E-mail</button>
         </div>
     </div>
@@ -151,15 +149,39 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
+// SISTEMA DE CONTINGÊNCIA: Carrega dados reservas caso a leitura do JSON falhe localmente
+const bancoReserva = {
+  "produtosConfigurados": [
+    { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "detalhes": "Sacola | Tam: 25x35x10 | Papel Duplex 240g | Acabamento: Plastificação Brilho", "precoBase": 4.00 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca", "precoBase": 4.50 },
+    { "id": 3, "nomeCompleto": "Sacola Kraft 180g - 30x40x12 - Sem Ennobrecimento", "detalhes": "Sacola | Tam: 30x40x12 | Papel Kraft 180g | Acabamento: Nenhum", "precoBase": 3.50 }
+  ],
+  "cordoes": [
+    { "nome": "Nylon", "preco": 0.30 },
+    { "nome": "Gorgurão", "preco": 0.80 },
+    { "nome": "Cetim", "preco": 0.60 },
+    { "nome": "São Francisco", "preco": 0.90 }
+  ],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.55 } }
+};
+
 window.onload = function() {
     fetch('dados.json')
         .then(response => response.json())
-        .then(data => { database = data; carregarMenusUnificados(); })
-        .catch(error => console.error("Erro ao carregar banco de dados:", error));
+        .then(data => { 
+            database = data; 
+            carregarMenusUnificados(); 
+        })
+        .catch(error => { 
+            console.warn("Aviso: Carregando banco reserva automático (teste local):", error);
+            database = bancoReserva;
+            carregarMenusUnificados();
+        });
 };
 
 function carregarMenusUnificados() {
     const produtoSel = document.getElementById("selectProdutoConfigurado");
+    if(!produtoSel) return;
     produtoSel.innerHTML = '';
     database.produtosConfigurados.forEach((prod) => {
         let opt = new Option(prod.nomeCompleto, prod.id);
@@ -169,6 +191,7 @@ function carregarMenusUnificados() {
     });
 
     const cordaoSel = document.getElementById("selectCordao");
+    if(!cordaoSel) return;
     cordaoSel.innerHTML = '';
     database.cordoes.forEach((c) => {
         let opt = new Option(c.nome, c.nome);
@@ -279,7 +302,8 @@ function montarEstruturaCanvas() {
     let linha1 = partes.slice(0, 4).join(" | ");
     let linha2 = partes.slice(4).join(" | ");
     
-    ctx.fillText("• " + inline1 = linha1, 50, 290);
+    // CORREÇÃO DA SINTAXE: Removido o erro "inline1 = " que quebrava o script
+    ctx.fillText("• " + linha1, 50, 290);
     if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
@@ -335,11 +359,9 @@ function abrirImagemNovaAba() {
     novaAba.document.close();
 }
 
-// NOVA FUNÇÃO: Dispara a rotina de envio automatizado por e-mail
 function enviarOrcamentoEmail() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const emailCliente = document.getElementById("emailCliente").value.trim();
-    const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
     
     const dadosComerciais = calcularValoresAtuais();
@@ -347,10 +369,8 @@ function enviarOrcamentoEmail() {
     const dataValidade = new Date();
     dataValidade.setDate(dataHoje.getDate() + 10);
 
-    // 1. Abre o orçamento em imagem na aba ao lado (assim você a tem aberta para salvar e anexar caso queira)
     abrirImagemNovaAba();
 
-    // 2. Monta a estrutura em formato texto detalhado para o corpo do e-mail
     let assunto = `Proposta Comercial de Embalagens - ${nome}`;
     
     let corpoEmail = `Prezado(a) ${nome},\n\n`;
@@ -375,15 +395,11 @@ function enviarOrcamentoEmail() {
     corpoEmail += `• Condições de Frete: SP Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).\n\n`;
     corpoEmail += `Nota: Atenciosamente, ${vendedor} - Emissão em ${dataHoje.toLocaleDateString('pt-BR')}.\n`;
 
-    // Codifica os textos de forma segura para links de e-mail na web
     const assuntoCodificado = encodeURIComponent(assunto);
     const corpoCodificado = encodeURIComponent(corpoEmail);
     const ccFixo = "comvil@comvil.com.br";
 
-    // Concatena o destinatário do formulário com a cópia fixa obrigatória
     const linkMailto = `mailto:${emailCliente}?cc=${ccFixo}&subject=${assuntoCodificado}&body=${corpoCodificado}`;
-
-    // Dispara a chamada nativa de e-mail do sistema operacional
     window.location.href = linkMailto;
 }
 

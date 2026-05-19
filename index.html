@@ -54,7 +54,6 @@
         <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
     <div class="row">
-        <!-- MÁSCARA AUTOMÁTICA ADICIONADA NO INPUT DE TELEFONE -->
         <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
     </div>
@@ -144,7 +143,6 @@ let objImgMinha = new Image();
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
-// MÁSCARA DE TELEFONE: Formata enquanto o vendedor digita de forma amigável
 function mascaraTelefone(input) {
     let v = input.value.replace(/\D/g, "");
     v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
@@ -337,41 +335,25 @@ function abrirImagemNovaAba() {
 }
 
 function enviarWhatsAppCliente() {
-    const nome = document.getElementById("nomeCliente").value.trim();
     let tel = document.getElementById("telCliente").value.trim();
     
-    // CORREÇÃO: Limpa parênteses, traços e espaços mantendo apenas os dígitos
+    // CORREÇÃO: Limpa parênteses, traços e espaços, mantendo apenas os números puros do DDD + telefone
     tel = tel.replace(/\D/g, '');
     
     if(!tel) { alert("Erro: Digite um número de telefone válido."); return; }
 
-    // CORREÇÃO: Força o código internacional do Brasil (55) se o vendedor digitar apenas o DDD + Número
-    if (tel.length === 11 || tel.length === 10) {
-        tel = "55" + tel;
+    // CORREÇÃO: Trata se o vendedor já digitou o 55 no formulário ou não, removendo o excesso
+    if (tel.startsWith("55") && tel.length > 11) {
+        tel = tel.substring(2);
     }
 
-    const dadosComerciais = calcularValoresAtuais();
-    
-    // Pega o nome do item selecionado para o resumo em texto
-    let textoProdutoCurto = dadosComerciais.itemSelecionado.text.split(" - ")[0];
-
-    // Monta a estrutura da mensagem
-    let textoMensagem = `Olá, *${nome}*! Segue o resumo comercial do seu orçamento digital das embalagens.\n\n`;
-    textoMensagem += `📦 *Item:* ${textoProdutoCurto}\n`;
-    textoMensagem += `🔢 *Quantidade:* ${dadosComerciais.qtd} unidades\n`;
-    textoMensagem += `💰 *Valor Total da Proposta:* R$ ${dadosComerciais.total.toFixed(2)}\n\n`;
-    textoMensagem += `🔗 _Estou te enviando também a imagem completa da folha de orçamento com o layout e termos de fábrica na aba ao lado._`;
-
-    const mensagemFinalUrl = encodeURIComponent(textoMensagem);
-    
-    // 1. Gera a imagem comercial na aba ao lado para o vendedor salvar e anexar
+    // 1. Abre a aba lateral contendo a folha de orçamento gerada para o vendedor salvar
     abrirImagemNovaAba();
     
-    // 2. CORREÇÃO DE REDIRECIONAMENTO AUTOMÁTICO PARA CELULAR OU WEB
+    // 2. CORREÇÃO: Cria o link concatenando o padrão fixo solicitado com os números limpos e dispara de imediato
     setTimeout(() => {
-        // O link universal da api.whatsapp se encarrega de abrir o app direto no celular ou o WhatsApp Web no computador sem dar erro
-        const linkEstavelWhatsapp = `https://whatsapp.com{tel}&text=${mensagemFinalUrl}`;
-        window.open(linkEstavelWhatsapp, "_blank");
+        const linkExatoWhatsapp = `https://whatsapp.com{tel}`;
+        window.open(linkExatoWhatsapp, "_blank");
     }, 450);
 }
 

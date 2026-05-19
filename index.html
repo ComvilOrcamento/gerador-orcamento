@@ -274,7 +274,7 @@ function abrirImagemNovaAba() {
         const telefoneLimpo = tel.replace(/\D/g, "");
         
         const textoInjetado = encodeURIComponent(`Olá, segue o orçamento. Atenciosamente, ${vendedor}`);
-        const linkWhatsApp = `https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}`;
+        const linkWhatsApp = `https://api.whatsapp.com/send?phone=55{telefoneLimpo}&text=${textoInjetado}`;
 
         novaAba.document.write(`
             <html>

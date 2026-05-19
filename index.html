@@ -28,8 +28,8 @@
         .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
         
-        .btn-email { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
-        .btn-email:hover { background: #128C7E; }
+        .btn-email { flex: 1; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
+        .btn-email:hover { background: #002244; }
         
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
@@ -210,7 +210,6 @@ function gerarVisualizacaoTela() {
 }
 
 function abrirImagemNovaAba() {
-    // Código de montagem gráfica do Canvas mantido idêntico para a exportação paralela
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
@@ -254,7 +253,7 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
     ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 495);
     ctx.fillText("• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, 515);
-    ctx.fillText("• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
+    ctx.fillText("• Prazo de Production: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
     ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 555);
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
@@ -267,7 +266,6 @@ function abrirImagemNovaAba() {
     }
 }
 
-// NOVA ROTINA AUTOMÁTICA: Envia os dados direto em background via API sem abrir janelas
 function enviarOrcamentoEmailAutomatico() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const emailCliente = document.getElementById("emailCliente").value.trim();
@@ -282,7 +280,6 @@ function enviarOrcamentoEmailAutomatico() {
     btn.innerText = "⏳ Enviando...";
     btn.disabled = true;
 
-    // Prepara a carga de dados estruturada que a API vai despachar
     const dadosFormulario = {
         "Cliente_Nome": nome,
         "Cliente_Email": emailCliente,
@@ -297,12 +294,10 @@ function enviarOrcamentoEmailAutomatico() {
         "Preco_Unitario": "R$ " + dadosComerciais.custoUnitario.toFixed(2),
         "VALOR_TOTAL": "R$ " + dadosComerciais.total.toFixed(2),
         "Validade_Proposta": dataValidade.toLocaleDateString('pt-BR'),
-        "_replyto": emailCliente, // Faz com que se você responder o e-mail, vá para o cliente
+        "_replyto": emailCliente,
         "_subject": `Orçamento de Embalagens Aprovado - ${nome}`
     };
 
-    // ENVIO SILENCIOSO VIA REQUISIÇÃO AJAX (NÃO ABRE PROGRAMA NENHUM)
-    // ATENÇÃO: Substitua o link abaixo pelo link gerado no Passo 1
     fetch("https://formspree.io", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },

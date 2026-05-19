@@ -352,7 +352,7 @@ function enviarWhatsAppCliente() {
     
     // 2. CORREÇÃO: Cria o link concatenando o padrão fixo solicitado com os números limpos e dispara de imediato
     setTimeout(() => {
-        const linkExatoWhatsapp = `https://whatsapp.com{tel}`;
+        const linkExatoWhatsapp = `https://api.whatsapp.com/send?phone=55{tel}`;
         window.open(linkExatoWhatsapp, "_blank");
     }, 450);
 }

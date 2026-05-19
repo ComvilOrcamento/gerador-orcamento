@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novo Orçamento Automatizado</title>
-    <!-- IMPORTANTE: Esta linha adiciona o script que transforma o layout em imagem JPG -->
+    <!-- Biblioteca para transformar HTML em Imagem -->
     <script src="https://cloudflare.com"></script>
     
     <style>
@@ -20,18 +20,20 @@
         input:focus, select:focus { border-color: #ba1cb3; }
         .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #9e1497; }
-        .btn-exportar { background: #ba1cb3; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; }
+        .btn-exportar { background: #ba1cb3; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; font-weight: bold; }
         .btn-exportar:hover { background: #9e1497; }
         
-        /* ESTILO DO RECIBO DE ORÇAMENTO (O QUE VIRA IMAGEM) */
+        /* ESTILO DO RECIBO DE ORÇAMENTO (IMAGEM) */
         #area-orcamento { 
             background: #ffffff; 
             border: 2px dashed #ba1cb3; 
             border-radius: 8px; 
-            padding: 20px; 
+            padding: 25px; 
             margin-top: 15px; 
-            display: none; /* Só aparece quando o usuário clica em Gerar */
+            display: none;
         }
+        .logo-container { text-align: center; margin-bottom: 15px; }
+        .logo-preview { max-height: 70px; max-width: 100%; object-fit: contain; }
         .recibo-linha { font-size: 13px; margin-bottom: 6px; color: #333; line-height: 1.4; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; margin-top: 12px; border-top: 1px solid #eee; padding-top: 8px; }
     </style>
@@ -40,6 +42,13 @@
 
 <div class="container">
     <h1>Novo Orçamento</h1>
+
+    <!-- CONFIGURAÇÃO DA LOGO -->
+    <h2>Sua Identidade</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Sua Logomarca (PNG ou JPG)</label>
+        <input type="file" id="uploadLogo" accept="image/*" onchange="carregarLogo(event)">
+    </div>
 
     <!-- DADOS DO CLIENTE -->
     <h2>Dados do cliente</h2>
@@ -137,7 +146,7 @@
     <div id="bloco-resultado" style="display: none;">
         <h2>Orçamento Gerado</h2>
         <div id="area-orcamento">
-            <!-- Os dados formatados entram aqui via JavaScript para virarem imagem -->
+            <!-- Estrutura interna montada dinamicamente via JS -->
         </div>
         <button class="btn-exportar" onclick="exportarJpg()">Exportar em JPG</button>
     </div>
@@ -146,6 +155,19 @@
 
 <script>
 let bancoDados = {};
+let logoBase64 = ""; // Guarda a imagem local convertida com segurança
+
+// Converte o arquivo de logo enviado pelo usuário em formato seguro para exportação
+function carregarLogo(event) {
+    const arquivo = event.target.files[0];
+    if (arquivo) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            logoBase64 = e.target.result;
+        };
+        reader.readAsDataURL(arquivo);
+    }
+}
 
 window.onload = function() {
     fetch('dados.json')
@@ -220,8 +242,11 @@ function calcularOrcamento() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    // Montando o layout visual do orçamento em HTML limpo dentro da caixa de preview
+    // Se houver logo, insere a imagem no topo do recibo
+    let tagLogo = logoBase64 ? `<div class="logo-container"><img class="logo-preview" src="${logoBase64}"></div>` : '';
+
     let htmlOrcamento = `
+        ${tagLogo}
         <div class="recibo-linha" style="font-weight: bold; text-align: center; font-size: 15px; margin-bottom: 15px; color: #ba1cb3;">PROPOSTA COMERCIAL DE EMBALAGENS</div>
         <div class="recibo-linha"><strong>Cliente:</strong> ${document.getElementById("nomeCliente").value || 'Não informado'}</div>
         <div class="recibo-linha"><strong>E-mail:</strong> ${document.getElementById("emailCliente").value || 'Não informado'}</div>
@@ -246,16 +271,28 @@ function calcularOrcamento() {
 function exportarJpg() {
     const alvo = document.getElementById("area-orcamento");
     
-    // Transforma a div HTML em um Canvas de imagem
-    html2canvas(alvo, { scale: 2 }).then(canvas => {
-        // Converte o canvas para arquivo de imagem JPG
-        const imagemUrl = canvas.toDataURL("image/jpeg", 0.9);
-        
-        // Cria um link temporário oculto para disparar o download automático
-        const link = document.createElement("a");
-        link.href = imagemUrl;
-        link.download = `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.jpg`;
-        link.click();
+    // Configurações extras de segurança para forçar o desenho da logo local
+    html2canvas(alvo, { 
+        scale: 2,
+        useCORS: true, 
+        allowTaint: true,
+        logging: false
+    }).then(canvas => {
+        try {
+            const imagemUrl = canvas.toDataURL("image/jpeg", 0.95);
+            
+            // Método definitivo de download compatível com GitHub Pages e arquivos locais
+            const link = document.createElement("a");
+            link.setAttribute("href", imagemUrl);
+            link.setAttribute("download", `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.jpg`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch(e) {
+            alert("Atenção: Para exportar a imagem corretamente, o sistema precisa estar rodando online no GitHub Pages ou em um servidor local.");
+            console.error(e);
+        }
     });
 }
 </script>

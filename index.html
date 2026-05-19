@@ -66,9 +66,10 @@
         <label>Nome *</label>
         <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
+    <!-- ALTERAÇÃO: Posições de Telefone e E-mail invertidas no formulário -->
     <div class="row">
-        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
         <div class="field"><label>Telefone *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" required></div>
+        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
     </div>
 
     <!-- ITENS -->
@@ -101,9 +102,10 @@
         <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
     </div>
 
+    <!-- ALTERAÇÃO: Adicionado o asterisco e o placeholder indicando obrigatoriedade -->
     <div class="field">
-        <label>Nome do vendedor</label>
-        <input type="text" id="nomeVendedor" placeholder="Seu nome">
+        <label>Nome do vendedor *</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome (Obrigatório)" required>
     </div>
 
     <button class="btn-principal" onclick="gerarPropostaCompleta()">Gerar Orçamento</button>
@@ -191,10 +193,11 @@ function gerarPropostaCompleta() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim();
     
-    // CORREÇÃO OBRIGATÓRIA: Bloqueia a execução se os campos essenciais estiverem vazios
-    if(!nome || !tel) { 
-        alert("Erro: O Nome do cliente e o Telefone são campos obrigatórios!"); 
+    // ALTERAÇÃO: Validação estrita incluindo a verificação do nome do vendedor
+    if(!nome || !tel || !vendedor) { 
+        alert("Erro: Nome do cliente, Telefone e Nome do vendedor são campos obrigatórios!"); 
         return; 
     }
     
@@ -268,7 +271,7 @@ function gerarPropostaCompleta() {
         </div>
         
         <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
-            Emitido por: ${document.getElementById("nomeVendedor").value || 'Comercial'} em ${dataHoje.toLocaleDateString('pt-BR')}
+            Emitido por: ${vendedor} em ${dataHoje.toLocaleDateString('pt-BR')}
         </div>
     `;
 
@@ -280,7 +283,6 @@ function gerarPropostaCompleta() {
 function abrirImagemNovaAba() {
     const alvo = document.getElementById("area-orcamento");
     
-    // CORREÇÃO DEFINITIVA ANTI-BLOQUEIO: Abre a aba na hora e coloca aviso de carregamento
     const novaAba = window.open("", "_blank");
     if (!novaAba) {
         alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações do navegador.");
@@ -296,10 +298,8 @@ function abrirImagemNovaAba() {
         </html>
     `);
 
-    // Inicia o processo de transformar o HTML em foto
     htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff' })
         .then(function (dataUrl) {
-            // Injeta o resultado final com as logos na aba já aberta
             novaAba.document.open();
             novaAba.document.write(`
                 <html lang="pt-BR">
@@ -321,7 +321,7 @@ function abrirImagemNovaAba() {
         })
         .catch(function (error) {
             novaAba.close();
-            alert('Houve um erro técnico de leitura do arquivo de imagem da logo do cliente.');
+            alert('Houve um erro técnico de leitura do arquivo de imagem. Verifique os arquivos anexos.');
             console.error(error);
         });
 }

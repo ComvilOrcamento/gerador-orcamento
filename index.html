@@ -59,7 +59,7 @@
         <select id="selectProdutoConfigurado"></select>
     </div>
     
-    <!-- NOVA ORDEM CORRIGIDA: Linha 1 com Impressão / Cores e Acabamento com Ilhós -->
+    <!-- IMPRESSÃO / CORES E ACABAMENTO COM ILHÓS -->
     <div class="row">
         <div class="field">
             <label>Impressão / Cores *</label>
@@ -79,7 +79,7 @@
         </div>
     </div>
     
-    <!-- NOVA ORDEM CORRIGIDA: Linha 2 com Tipo de Cordão / Alça e Furo para Laço -->
+    <!-- TIPO DE CORDÃO / ALÇA E FURO PARA LAÇO -->
     <div class="row">
         <div class="field">
             <label>Tipo de Cordão / Alça *</label>
@@ -122,7 +122,8 @@
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
         </div>
         <canvas id="canvasEspelho" style="display:none;"></canvas>
-        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Gerar Imagem JPEG em Nova Aba</button>
+        <!-- TEXTO DO BOTÃO ALTERADO PARA EXPORTAR ORÇAMENTO -->
+        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
     </div>
 </div>
 
@@ -255,7 +256,6 @@ function abrirImagemNovaAba() {
     if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-    // ORDEM DA LINHA NO DOCUMENTO: Cores, Ilhós, Alça e Furo Laço
     ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");

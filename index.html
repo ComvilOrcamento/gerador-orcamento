@@ -278,10 +278,9 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
         
-        // CORREÇÃO: Limpa diretamente o valor em tempo real coletado do input de texto
+        // Garante o isolamento completo de números limpos
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
-        const textoInjetado = encodeURIComponent(`Olá, segue o orçamento. Atenciosamente, ${vendedor}`);
-        const linkWhatsApp = `https://api.whatsapp.com/send?phone=55{telefoneLimpo}&text=${textoInjetado}`;
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
 
         novaAba.document.write(`
             <html>
@@ -301,7 +300,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="${linkWhatsApp}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="https://api.whatsapp.com/send?phone=55` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

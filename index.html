@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Orçamentos com Mockup</title>
-    <!-- Script de captura de tela atualizado -->
+    <title>Gerador de Orçamentos Profissional</title>
+    
+    <!-- Bibliotecas para Geração de PDF Perfeita -->
     <script src="https://cloudflare.com"></script>
     
     <style>
@@ -18,48 +19,66 @@
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
         input:focus, select:focus { border-color: #ba1cb3; }
+        
         .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #9e1497; }
-        .btn-exportar { background: #ba1cb3; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; font-weight: bold; }
-        .btn-exportar:hover { background: #9e1497; }
+        .btn-exportar { background: #00bcd4; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; font-weight: bold; }
+        .btn-exportar:hover { background: #0097a7; }
         
-        /* ESTILO DO RECIBO */
+        /* ESTILO DA FOLHA DO ORÇAMENTO (FORMATADA PARA PDF A4) */
         #area-orcamento { 
             background: #ffffff; 
-            border: 2px dashed #ba1cb3; 
-            border-radius: 8px; 
-            padding: 25px; 
+            padding: 40px; 
             margin-top: 15px; 
             display: none;
+            color: #333;
         }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
-        .logo-box { flex: 1; text-align: center; font-size: 10px; color: #777; }
-        .logo-preview { max-height: 50px; max-width: 100%; object-fit: contain; }
-        .recibo-linha { font-size: 13px; margin-bottom: 6px; color: #333; line-height: 1.4; }
-        .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; margin-top: 12px; border-top: 1px solid #eee; padding-top: 8px; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; }
+        .logo-box { flex: 1; }
+        .logo-box img { max-height: 65px; max-width: 180px; object-fit: contain; }
+        .recibo-titulo { font-size: 18px; font-weight: bold; color: #ba1cb3; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px; }
+        
+        /* SEÇÕES DO PDF */
+        .secao-pdf { margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 6px; border-left: 4px solid #ba1cb3; }
+        .secao-titulo { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 8px; }
+        .recibo-linha { font-size: 13px; margin-bottom: 6px; line-height: 1.5; color: #444; }
+        
+        /* TABELA DE PREÇOS NO PDF */
+        .tabela-itens { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
+        .tabela-itens th { background: #ba1cb3; color: white; font-size: 12px; padding: 8px; text-align: left; font-weight: bold; }
+        .tabela-itens td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .recibo-total { font-size: 18px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 15px; padding-top: 10px; }
 
-        /* VISUALIZAÇÃO DA SACOLA (MOCKUP) */
-        .preview-sacola-container { display: flex; justify-content: center; margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 6px; }
+        /* VISUALIZAÇÃO DA SACOLA 3D ILUSTRATIVA */
+        .preview-sacola-container { display: flex; justify-content: center; margin: 15px 0; padding: 10px; background: #fff; }
         .sacola-virtual { 
-            background: #f0f0f0; 
-            border: 2px solid #555; 
-            border-radius: 4px; 
+            background: #e8e8e8; 
+            border: 1px solid #b5b5b5; 
+            box-shadow: -8px 8px 15px rgba(0,0,0,0.15), inset 15px 0 20px rgba(0,0,0,0.05);
             position: relative; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center;
+            transform: perspective(500px) rotateY(-12deg);
+            transform-style: preserve-3d;
+            border-radius: 2px;
             transition: all 0.3s ease;
         }
-        .alca-virtual {
-            width: 40px; height: 20px;
-            border: 2px solid #555;
-            border-bottom: none;
-            border-radius: 20px 20px 0 0;
-            position: absolute; top: -21px;
+        /* Lateral 3d dobrada */
+        .sacola-virtual::before {
+            content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%;
+            background: #d8d8d8; transform: skewY(12deg); transform-origin: left;
+            border: 1px solid #b5b5b5; border-left: none;
         }
-        .logo-sacola-virtual { max-width: 60%; max-height: 50%; object-fit: contain; opacity: 0.8; }
-        .dimensao-label { position: absolute; bottom: 4px; font-size: 9px; color: #666; font-weight: bold; }
+        .alca-virtual {
+            width: 35px; height: 25px;
+            border: 3px solid #666; border-bottom: none;
+            border-radius: 30px 30px 0 0;
+            position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+        }
+        .logo-sacola-virtual { max-width: 55%; max-height: 45%; object-fit: contain; filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.15)); }
+        .dimensao-label { position: absolute; bottom: 6px; font-size: 9px; color: #777; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -67,17 +86,11 @@
 <div class="container">
     <h1>Novo Orçamento</h1>
 
-    <!-- IDENTIDADE VISUAL -->
-    <h2>Logomarcas</h2>
-    <div class="row">
-        <div class="field">
-            <label>Sua Logo (Minha Empresa)</label>
-            <input type="file" id="uploadLogoMinha" accept="image/*" onchange="carregarImagem(event, 'minha')">
-        </div>
-        <div class="field">
-            <label>Logo do Cliente (Estampa)</label>
-            <input type="file" id="uploadLogoCliente" accept="image/*" onchange="carregarImagem(event, 'cliente')">
-        </div>
+    <!-- LOGO DO CLIENTE (OPCIONAL) -->
+    <h2>Arte do Cliente</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Logo do Cliente (Opcional - Para a estampa da sacola)</label>
+        <input type="file" id="uploadLogoCliente" accept="image/*" onchange="carregarLogoCliente(event)">
     </div>
 
     <!-- DADOS DO CLIENTE -->
@@ -169,28 +182,26 @@
 
     <button class="btn-principal" onclick="calcularOrcamento()">Gerar Orçamento</button>
 
-    <!-- SAÍDA -->
+    <!-- SAÍDA EM PDF -->
     <div id="bloco-resultado" style="display: none;">
-        <h2>Orçamento Gerado</h2>
+        <h2>Visualização da Proposta</h2>
         <div id="area-orcamento">
             <!-- Renderizado via JS -->
         </div>
-        <button class="btn-exportar" onclick="exportarJpg()">Exportar em JPG</button>
+        <button class="btn-exportar" onclick="exportarPdf()">Baixar Orçamento em PDF</button>
     </div>
 </div>
 
 <script>
 let bancoDados = {};
-let logoMinhaBase64 = "";
 let logoClienteBase64 = "";
 
-function carregarImagem(event, tipo) {
+function carregarLogoCliente(event) {
     const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            if(tipo === 'minha') logoMinhaBase64 = e.target.result;
-            if(tipo === 'cliente') logoClienteBase64 = e.target.result;
+            logoClienteBase64 = e.target.result;
         };
         reader.readAsDataURL(arquivo);
     }
@@ -265,42 +276,75 @@ function calcularOrcamento() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    // Ajustar dimensões visuais da sacola com base na escolha
+    // Regra de proporção para a Sacola Ilustrativa 3D Realista
     let w = 110, h = 140;
-    if(tamSelect.value === "25x35x10") { w = 140; h = 180; }
-    if(tamSelect.value === "30x40x12") { w = 170; h = 200; }
+    if(tamSelect.value === "25x35x10") { w = 135; h = 175; }
+    if(tamSelect.value === "30x40x12") { w = 160; h = 195; }
 
-    let imgMinhaTag = logoMinhaBase64 ? `<img class="logo-preview" src="${logoMinhaBase64}">` : '<span>[Sua Logo]</span>';
-    let imgClienteTag = logoClienteBase64 ? `<img class="logo-preview" src="${logoClienteBase64}">` : '<span>[Logo Cliente]</span>';
-    let imgSacolaTag = logoClienteBase64 ? `<img class="logo-sacola-virtual" src="${logoClienteBase64}">` : '<span style="font-size:9px;color:#aaa">Sua Estampa</span>';
+    // Sua logo fixa puxa direto do repositório
+    let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
+    
+    // Logo do cliente só aparece se ele fizer o upload (opcional)
+    let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Arte Sem Estampa</span>';
+    let imgSacolaTag = logoClienteBase64 ? `<img class="logo-sacola-virtual" src="${logoClienteBase64}">` : '<span style="font-size:10px;color:#999;font-weight:bold;letter-spacing:1px;text-transform:uppercase">Sua Marca</span>';
 
     let htmlOrcamento = `
         <div class="logos-header">
             <div class="logo-box">${imgMinhaTag}</div>
             <div class="logo-box" style="text-align:right;">${imgClienteTag}</div>
         </div>
-        <div class="recibo-linha" style="font-weight: bold; text-align: center; font-size: 14px; margin-bottom: 12px; color: #ba1cb3;">PROPOSTA COMERCIAL SIMPLIFICADA</div>
-        <div class="recibo-linha"><strong>Cliente:</strong> ${document.getElementById("nomeCliente").value || 'Não informado'}</div>
-        <div class="recibo-linha"><strong>Contato:</strong> ${document.getElementById("telCliente").value || ''} | ${document.getElementById("emailCliente").value || ''}</div>
-        <div class="recibo-linha" style="border-bottom: 1px dashed #ccc; margin: 8px 0;"></div>
         
-        <!-- Mockup Visual da Sacola Layout -->
-        <div class="preview-sacola-container">
-            <div class="sacola-virtual" style="width: ${w}px; height: ${h}px;">
-                <div class="alca-virtual"></div>
-                ${imgSacolaTag}
-                <div class="dimensao-label">${tamSelect.value}</div>
+        <div class="recibo-titulo">Orçamento Comercial</div>
+        
+        <div class="secao-pdf">
+            <div class="secao-titulo">Dados do Cliente</div>
+            <div class="recibo-linha"><strong>Nome/Razão Social:</strong> ${document.getElementById("nomeCliente").value || 'Não informado'}</div>
+            <div class="recibo-linha"><strong>Telefone:</strong> ${document.getElementById("telCliente").value || 'Não informado'} | <strong>E-mail:</strong> ${document.getElementById("emailCliente").value || 'Não informado'}</div>
+        </div>
+
+        <div class="secao-pdf">
+            <div class="secao-titulo">Visualização Conceitual do Produto (Perspectiva 3D)</div>
+            <div class="preview-sacola-container">
+                <div class="sacola-virtual" style="width: ${w}px; height: ${h}px;">
+                    <div class="alca-virtual"></div>
+                    ${imgSacolaTag}
+                    <div class="dimensao-label">${tamSelect.value}</div>
+                </div>
             </div>
         </div>
 
-        <div class="recibo-linha"><strong>Produto:</strong> ${document.getElementById("produto").value}</div>
-        <div class="recibo-linha"><strong>Material:</strong> Papel ${papelSelect.value} ${document.getElementById("gramatura").value}</div>
-        <div class="recibo-linha"><strong>Acabamento/Cordão:</strong> ${cordaoSelect.value} ${acabamentosAtivos.length > 0 ? ' + ' + acabamentosAtivos.join(", ") : ""}</div>
-        <div class="recibo-linha" style="border-bottom: 1px dashed #ccc; margin: 8px 0;"></div>
-        <div class="recibo-linha"><strong>Tiragem:</strong> ${qtd} unidades</div>
-        <div class="recibo-linha"><strong>Preço Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
-        <div class="recibo-total">VALOR TOTAL: R$ ${valorTotal.toFixed(2)}</div>
-        <div class="recibo-linha" style="margin-top: 10px; font-size: 11px; color: #777; text-align: center;">Vendedor: ${document.getElementById("nomeVendedor").value || 'Comercial'}</div>
+        <div class="secao-pdf">
+            <div class="secao-titulo">Especificações Técnicas</div>
+            <table class="tabela-itens">
+                <thead>
+                    <tr>
+                        <th>Produto / Tamanho</th>
+                        <th>Papel / Gramatura</th>
+                        <th>Cores</th>
+                        <th>Cordão e Acabamentos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>${document.getElementById("produto").value} (${tamSelect.value})</td>
+                        <td>${papelSelect.value} - ${document.getElementById("gramatura").value}</td>
+                        <td>${document.getElementById("cores").value}</td>
+                        <td>${cordaoSelect.value}${acabamentosAtivos.length > 0 ? ' + ' + acabamentosAtivos.join(", ") : " (Sem Adicionais)"}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="secao-pdf">
+            <div class="secao-titulo">Valores e Condições</div>
+            <div class="recibo-linha"><strong>Quantidade Solicitada:</strong> ${qtd} unidades</div>
+            <div class="recibo-linha"><strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
+            <div class="recibo-total">VALOR TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}</div>
+        </div>
+
+        <div class="recibo-linha" style="margin-top: 30px; font-size: 11px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 15px;">
+            Proposta gerada por: ${document.getElementById("nomeVendedor").value || 'Departamento Comercial'} em ${new Date().toLocaleDateString('pt-BR')}
+        </div>
     `;
 
     document.getElementById("area-orcamento").innerHTML = htmlOrcamento;
@@ -308,38 +352,21 @@ function calcularOrcamento() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarJpg() {
-    const alvo = document.getElementById("area-orcamento");
+function exportarPdf() {
+    const elemento = document.getElementById("area-orcamento");
+    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
     
-    // Configuração robusta antiqueda para navegadores mobile e desktop
-    html2canvas(alvo, { 
-        scale: 2, 
-        useCORS: true, 
-        allowTaint: true,
-        logging: false,
-        backgroundColor: "#ffffff"
-    }).then(canvas => {
-        try {
-            // Gera um link persistente em formato de imagem JPEG
-            const imagemUrl = canvas.toDataURL("image/jpeg", 0.95);
-            
-            const link = document.createElement("a");
-            link.href = imagemUrl;
-            link.download = `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.jpg`;
-            
-            // Corrige falha no clique adicionando o elemento na árvore
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-        } catch(err) {
-            // SISTEMA ANTI-ERRO: Se o navegador ainda bloquear o download automático,
-            // ele abre a imagem pura em uma nova janela para o usuário clicar com o botão direito e salvar.
-            const imagemUrl = canvas.toDataURL("image/jpeg", 0.95);
-            var novaAba = window.open();
-            novaAba.document.write('<h3 style="font-family:Arial;text-align:center;margin-top:20px;">Toque e segure na imagem abaixo para Salvar</h3><img src="' + imagemUrl + '" style="max-width:100%; display:block; margin:20px auto; border:1px solid #ccc; box-shadow:0 2px 10px rgba(0,0,0,0.1);"/>');
-        }
-    });
+    // Configurações de página A4 perfeitas para impressão
+    const opcoes = {
+        margin:       10,
+        filename:     `Orcamento_${nomeCliente}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Executa a exportação nativa em PDF
+    html2pdf().set(opcoes).from(elemento).save();
 }
 </script>
 </body>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
     
-    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <!-- BIBLIOTECA ESTÁVEL E ATUALIZADA PARA EMISSÃO DE PDF NATIVO -->
     <script src="https://cloudflare.com"></script>
     
     <style>
@@ -25,8 +25,8 @@
         .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #0097a7; }
         
-        /* ESTILO DA FOLHA DO ORÇAMENTO */
-        #area-orcamento { background: #ffffff; padding: 35px; margin-top: 15px; display: none; color: #333; width: 100%; max-width: 540px; }
+        /* ESTILO INTERNO DA FOLHA DO ORÇAMENTO (OTIMIZADO PARA IMPRESSÃO A4) */
+        #area-orcamento { background: #ffffff; padding: 35px; margin-top: 15px; display: none; color: #333; width: 100%; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
@@ -35,7 +35,7 @@
         .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
         
-        /* TABELA */
+        /* TABELA DE ITENS COM DESIGN LIMPO */
         .tabela-itens { width: 100%; border-collapse: collapse; margin: 10px 0; }
         .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
@@ -95,7 +95,6 @@
         <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
     </div>
 
-    <!-- CORREÇÃO: Removido asterisco e obrigatoriedade do vendedor -->
     <div class="field">
         <label>Nome do vendedor</label>
         <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
@@ -108,7 +107,7 @@
         <div id="area-orcamento">
             <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Gerar JPEG em Nova Aba</button>
+        <button class="btn-exportar" onclick="exportarComoPdf()">Exportar e Baixar Orçamento em PDF</button>
     </div>
 </div>
 
@@ -116,8 +115,9 @@
 let bancoDados = { produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
+// CORREÇÃO DA LOGO: Transforma o arquivo em um blob em tempo real, eliminando travas de segurança
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files;
+    const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { 
@@ -160,7 +160,6 @@ function gerarPropostaCompleta() {
     const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim();
     
-    // CORREÇÃO: O vendedor não é mais avaliado na validação obrigatória
     if(!nome || !tel) { 
         alert("Erro: Nome do cliente e Telefone são campos obrigatórios!"); 
         return; 
@@ -244,52 +243,21 @@ function gerarPropostaCompleta() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function abrirImagemNovaAba() {
+function exportarComoPdf() {
     const alvo = document.getElementById("area-orcamento");
-    const novaAba = window.open("", "_blank");
-    if (!novaAba) {
-        alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações.");
-        return;
-    }
+    const nomeCliente = document.getElementById("nomeCliente").value.trim() || 'Cliente';
     
-    novaAba.document.write(`
-        <html>
-        <head><title>Processando Orçamento...</title></head>
-        <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
-            <h2>⏳ Processando e renderizando sua imagem... Aguarde.</h2>
-        </body>
-        </html>
-    `);
+    // CORREÇÃO DEFINITIVA: Configurações milimétricas para renderizar o PDF mantendo as imagens seguras em cache
+    const opcoes = {
+        margin:       10,
+        filename:     `Orcamento_${nomeCliente}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, allowTaint: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-    // CORREÇÃO: Delay de segurança de 250 milissegundos para forçar o navegador a carregar o cache da imagem da logo do cliente antes de gerar o JPEG
-    setTimeout(() => {
-        htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff' })
-            .then(function (dataUrl) {
-                novaAba.document.open();
-                novaAba.document.write(`
-                    <html lang="pt-BR">
-                    <head>
-                        <title>Orçamento Comercial - Imagem</title>
-                        <style>
-                            body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                            .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
-                            img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-                        <img src="${dataUrl}" />
-                    </body>
-                    </html>
-                `);
-                novaAba.document.close();
-            })
-            .catch(function (error) {
-                novaAba.close();
-                alert('Erro ao gerar o orçamento visual. Tente gerar novamente.');
-                console.error(error);
-            });
-    }, 250);
+    // Executa a compilação nativa em PDF e inicia o download imediato
+    html2pdf().set(opcoes).from(alvo).save();
 }
 </script>
 </body>

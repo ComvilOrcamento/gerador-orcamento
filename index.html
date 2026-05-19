@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA QUE FAZ O DOWNLOAD AUTOMÁTICO EM PDF SEM TRAVAR O NAVEGADOR -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -21,13 +25,12 @@
         .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #0097a7; }
         
-        /* ESTILO DA PROPOSTA VISUAL NA TELA */
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
+        /* ESTILO INTERNO DA FOLHA DE PROPOSTA (PREPARADA PARA PDF A4 COURIER/ARIAL) */
+        #area-orcamento { background: #ffffff; padding: 35px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; }
-        .recibo-titulo { font-size: 16px; font-weight: bold; color: #ba1cb3; text-transform: uppercase; margin-bottom: 15px; }
-        .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; }
+        .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; }
         .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
         
@@ -36,13 +39,6 @@
         .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
-
-        /* CONFIGURAÇÃO EXCLUSIVA DE IMPRESSÃO */
-        @media print {
-            body { background: white; padding: 0; }
-            .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
-            #bloco-resultado, #area-orcamento { display: block !important; border: none !important; padding: 0 !important; width: 100% !important; }
-        }
     </style>
 </head>
 <body>
@@ -111,12 +107,12 @@
 
     <button class="btn-principal" onclick="gerarPropostaCompleta()">Gerar Orçamento</button>
 
-    <!-- SAÍDA SEGURA -->
+    <!-- ÁREA DE PREVIEW E EXPORTAÇÃO DIRETA -->
     <div id="bloco-resultado" style="display: none;">
         <div id="area-orcamento">
             <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="exportarProposta()">Salvar / Imprimir Proposta Comercial</button>
+        <button class="btn-exportar" onclick="exportarPdfDireto()">Exportar Orçamento e Download Automático</button>
     </div>
 </div>
 
@@ -125,7 +121,7 @@ let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes
 let logoClienteBase64 = "";
 
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files[0];
+    const arquivo = event.target.files;
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { logoClienteBase64 = e.target.result; };
@@ -134,12 +130,10 @@ function carregarLogoCliente(event) {
 }
 
 window.onload = function() {
-    // 1. Carrega dados estruturados do arquivo JSON
     fetch('dados.json')
         .then(response => response.json())
         .then(data => {
             bancoDados = data;
-            // 2. Mescla com os clientes novos salvos na memória local do navegador
             const clientesLocais = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
             bancoDados.clientes = [...bancoDados.clientes, ...clientesLocais];
             carregarMenus();
@@ -150,9 +144,7 @@ window.onload = function() {
 function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
     clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
-    bancoDados.clientes.forEach((c, index) => { 
-        clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); 
-    });
+    bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
     
     const prodSel = document.getElementById("produto");
     prodSel.innerHTML = '';
@@ -181,21 +173,14 @@ function selecionarCliente() {
     }
 }
 
-function salvarClienteAutomatico(nome, email, telefone) {
+function salvarClienteAutomatico(nome, email, telephone) {
     if (!nome) return;
-    
-    // Verifica se o cliente já existe na lista atual
     const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
-    
     if (!jaExiste) {
-        const novoCliente = { nome, email, telefone };
-        
-        // Puxa o histórico do navegador, insere o novo e grava de volta
+        const novoCliente = { nome, email, telephone };
         let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
         historicoLocal.push(novoCliente);
         localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
-        
-        // Atualiza a memória de execução e reconstrói o menu select
         bancoDados.clientes.push(novoCliente);
         carregarMenus();
     }
@@ -206,15 +191,9 @@ function gerarPropostaCompleta() {
     const email = document.getElementById("emailCliente").value;
     const tel = document.getElementById("telCliente").value;
     
-    if(!nome) {
-        alert("Por favor, digite o nome do cliente.");
-        return;
-    }
-
-    // Executa a rotina de gravação automática se for um cadastro inédito
+    if(!nome) { alert("Por favor, digite o nome do cliente."); return; }
     salvarClienteAutomatico(nome, email, tel);
     
-    // Realiza os cálculos comerciais normais
     const tamSelect = document.getElementById("tamanho");
     const papelSelect = document.getElementById("papel");
     const cordaoSelect = document.getElementById("cordao");
@@ -235,7 +214,11 @@ function gerarPropostaCompleta() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    // Cabeçalho de logos: Minha Empresa fixa à esquerda, Logo do Cliente à direita (se houver)
+    // CÁLCULO DINÂMICO DE DATAS (EMISSÃO E VALIDADE)
+    const dataHoje = new Date();
+    const dataValidade = new Date();
+    dataValidade.setDate(dataHoje.getDate() + 10); // Adiciona exatamente 10 dias de validade
+
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
     let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Sem Logo Anexa</span>';
 
@@ -272,8 +255,13 @@ function gerarPropostaCompleta() {
             <div class="recibo-total">TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}</div>
         </div>
         
+        <div class="secao-pdf" style="background:#fff2fd; border-left:3px solid #ba1cb3; padding:10px;">
+            <div class="recibo-linha" style="color:#ba1cb3; font-weight:bold; font-size:11px;">⚠️ CONDIÇÕES COMERCIAIS</div>
+            <div class="recibo-linha" style="font-size:11px;">• Esta proposta tem **tempo de validade por 10 dias**, expirando obrigatoriamente em: <strong>${dataValidade.toLocaleDateString('pt-BR')}</strong>.</div>
+        </div>
+        
         <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
-            Emitido por: ${document.getElementById("nomeVendedor").value || 'Comercial'} em ${new Date().toLocaleDateString('pt-BR')}
+            Emitido por: ${document.getElementById("nomeVendedor").value || 'Comercial'} em ${dataHoje.toLocaleDateString('pt-BR')}
         </div>
     `;
 
@@ -282,8 +270,21 @@ function gerarPropostaCompleta() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarProposta() {
-    window.print();
+function exportarPdfDireto() {
+    const alvo = document.getElementById("area-orcamento");
+    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
+    
+    // Configurações de margem e tamanho para o PDF baixar perfeitamente formatado
+    const configuracao = {
+        margin:       12,
+        filename:     `Orcamento_${nomeCliente}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Executa a conversão nativa do HTML e força o download automático
+    html2pdf().set(configuracao).from(alvo).save();
 }
 </script>
 </body>

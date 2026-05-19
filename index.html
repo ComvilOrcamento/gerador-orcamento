@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Orçamentos Profissional</title>
+    <title>Gerador de Orçamentos Comercial</title>
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -23,7 +23,7 @@
         
         /* ESTILO DA PROPOSTA VISUAL NA TELA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; }
         .recibo-titulo { font-size: 16px; font-weight: bold; color: #ba1cb3; text-transform: uppercase; margin-bottom: 15px; }
@@ -37,23 +37,7 @@
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
 
-        /* MOCKUP FOTOREALISTA DA IA COM ESTAMPA COMPOSITA */
-        .mockup-ia-box { display: flex; justify-content: center; margin: 15px 0; }
-        .sacola-ia-container { 
-            width: 240px; height: 180px; 
-            background-image: url('mockup-sacola.jpg'); /* Sua imagem realista gerada por IA */
-            background-size: cover; background-position: center;
-            position: relative; border-radius: 4px; border: 1px solid #eee;
-        }
-        .logo-cliente-sobreposta { 
-            position: absolute; 
-            top: 50%; left: 50%; 
-            transform: translate(-50%, -30%) skewY(-2deg); /* Inclinação leve para casar com a perspectiva 3D da IA */
-            max-width: 35%; max-height: 35%; 
-            object-fit: contain; opacity: 0.85; mix-blend-mode: multiply; 
-        }
-
-        /* CONFIGURAÇÃO EXCLUSIVA DE IMPRESSÃO (RESOLVE FAIXA DE SEGURANÇA DO DOWNLOAD) */
+        /* CONFIGURAÇÃO EXCLUSIVA DE IMPRESSÃO */
         @media print {
             body { background: white; padding: 0; }
             .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
@@ -69,7 +53,7 @@
     <!-- LOGO DO CLIENTE (OPCIONAL) -->
     <h2>Arte do Cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
-        <label>Logo do Cliente (Opcional - Estampa)</label>
+        <label>Logo do Cliente (PNG ou JPG)</label>
         <input type="file" id="uploadLogoCliente" accept="image/*" onchange="carregarLogoCliente(event)">
     </div>
 
@@ -83,7 +67,7 @@
     </div>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
-        <input type="text" id="nomeCliente" placeholder="Nome do cliente" required>
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa" required>
     </div>
     <div class="row">
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente"></div>
@@ -125,7 +109,7 @@
         <input type="text" id="nomeVendedor" placeholder="Seu nome">
     </div>
 
-    <button class="btn-principal" onclick="calcularOrcamento()">Gerar Orçamento</button>
+    <button class="btn-principal" onclick="gerarPropostaCompleta()">Gerar Orçamento</button>
 
     <!-- SAÍDA SEGURA -->
     <div id="bloco-resultado" style="display: none;">
@@ -137,7 +121,7 @@
 </div>
 
 <script>
-let bancoDados = {};
+let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
 function carregarLogoCliente(event) {
@@ -150,22 +134,40 @@ function carregarLogoCliente(event) {
 }
 
 window.onload = function() {
+    // 1. Carrega dados estruturados do arquivo JSON
     fetch('dados.json')
         .then(response => response.json())
-        .then(data => { bancoDados = data; carregarMenus(); })
+        .then(data => {
+            bancoDados = data;
+            // 2. Mescla com os clientes novos salvos na memória local do navegador
+            const clientesLocais = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
+            bancoDados.clientes = [...bancoDados.clientes, ...clientesLocais];
+            carregarMenus();
+        })
         .catch(error => console.error("Erro ao carregar banco de dados:", error));
 };
 
 function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
-    bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
+    clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
+    bancoDados.clientes.forEach((c, index) => { 
+        clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); 
+    });
+    
     const prodSel = document.getElementById("produto");
+    prodSel.innerHTML = '';
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
+    
     const tamSel = document.getElementById("tamanho");
+    tamSel.innerHTML = '';
     bancoDados.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
+    
     const papelSel = document.getElementById("papel");
+    papelSel.innerHTML = '';
     bancoDados.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
+    
     const cordaoSel = document.getElementById("cordao");
+    cordaoSel.innerHTML = '';
     bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
 }
 
@@ -179,7 +181,40 @@ function selecionarCliente() {
     }
 }
 
-function calcularOrcamento() {
+function salvarClienteAutomatico(nome, email, telefone) {
+    if (!nome) return;
+    
+    // Verifica se o cliente já existe na lista atual
+    const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
+    
+    if (!jaExiste) {
+        const novoCliente = { nome, email, telefone };
+        
+        // Puxa o histórico do navegador, insere o novo e grava de volta
+        let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
+        historicoLocal.push(novoCliente);
+        localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
+        
+        // Atualiza a memória de execução e reconstrói o menu select
+        bancoDados.clientes.push(novoCliente);
+        carregarMenus();
+    }
+}
+
+function gerarPropostaCompleta() {
+    const nome = document.getElementById("nomeCliente").value;
+    const email = document.getElementById("emailCliente").value;
+    const tel = document.getElementById("telCliente").value;
+    
+    if(!nome) {
+        alert("Por favor, digite o nome do cliente.");
+        return;
+    }
+
+    // Executa a rotina de gravação automática se for um cadastro inédito
+    salvarClienteAutomatico(nome, email, tel);
+    
+    // Realiza os cálculos comerciais normais
     const tamSelect = document.getElementById("tamanho");
     const papelSelect = document.getElementById("papel");
     const cordaoSelect = document.getElementById("cordao");
@@ -200,32 +235,26 @@ function calcularOrcamento() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
+    // Cabeçalho de logos: Minha Empresa fixa à esquerda, Logo do Cliente à direita (se houver)
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    let imgSacolaTag = logoClienteBase64 ? `<img class="logo-cliente-sobreposta" src="${logoClienteBase64}">` : '';
+    let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Sem Logo Anexa</span>';
 
     let htmlOrcamento = `
         <div class="logos-header">
             <div class="logo-box">${imgMinhaTag}</div>
-            <div class="logo-box" style="text-align:right; font-size:12px; color:#ba1cb3; font-weight:bold;">PROPOSTA COMERCIAL</div>
+            <div class="logo-box" style="text-align:right;">${imgClienteTag}</div>
         </div>
+        
+        <div style="font-size: 15px; font-weight: bold; color: #ba1cb3; margin-bottom: 15px; text-transform: uppercase;">Proposta Comercial</div>
         
         <div class="secao-pdf">
             <div class="secao-titulo">Dados do Cliente</div>
-            <div class="recibo-linha"><strong>Nome:</strong> ${document.getElementById("nomeCliente").value}</div>
-            <div class="recibo-linha"><strong>Contato:</strong> ${document.getElementById("telCliente").value} | ${document.getElementById("emailCliente").value}</div>
+            <div class="recibo-linha"><strong>Nome / Razão Social:</strong> ${nome}</div>
+            <div class="recibo-linha"><strong>Telefone:</strong> ${tel || 'Não informado'} | <strong>E-mail:</strong> ${email || 'Não informado'}</div>
         </div>
 
         <div class="secao-pdf">
-            <div class="secao-titulo">Apresentação Conceitual Realística (Mockup IA)</div>
-            <div class="mockup-ia-box">
-                <div class="sacola-ia-container">
-                    ${imgSacolaTag}
-                </div>
-            </div>
-        </div>
-
-        <div class="secao-pdf">
-            <div class="secao-titulo">Especificações do Produto</div>
+            <div class="secao-titulo">Especificações do Pedido</div>
             <table class="tabela-itens">
                 <thead><tr><th>Item</th><th>Papel</th><th>Cores</th><th>Acabamentos</th></tr></thead>
                 <tbody><tr>
@@ -238,9 +267,13 @@ function calcularOrcamento() {
         </div>
 
         <div class="secao-pdf">
-            <div class="secao-titulo">Fechamento Financeiro</div>
+            <div class="secao-titulo">Resumo Financeiro</div>
             <div class="recibo-linha"><strong>Quantidade:</strong> ${qtd} unidades | <strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
-            <div class="recibo-total">TOTAL: R$ ${valorTotal.toFixed(2)}</div>
+            <div class="recibo-total">TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}</div>
+        </div>
+        
+        <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
+            Emitido por: ${document.getElementById("nomeVendedor").value || 'Comercial'} em ${new Date().toLocaleDateString('pt-BR')}
         </div>
     `;
 
@@ -250,7 +283,6 @@ function calcularOrcamento() {
 }
 
 function exportarProposta() {
-    // Abre a janela de sistema nativa. O usuário escolhe "Salvar como PDF" ou enviar direto para a impressora.
     window.print();
 }
 </script>

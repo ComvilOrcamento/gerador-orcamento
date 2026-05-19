@@ -19,27 +19,19 @@
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
         
-        /* ALTERAÇÃO DE COR: Borda do campo em foco (Azul da Logo) */
         input:focus, select:focus { border-color: #0056b3; }
         
-        /* ALTERAÇÃO DE COR: Botão Principal (Azul Escuro da Logo) */
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
-        /* ALTERAÇÃO DE COR: Botão Exportar (Azul Médio da Logo) */
         .btn-exportar { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #004085; }
         
         /* VISUALIZAÇÃO PRÉVIA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
-        
-        /* ALTERAÇÃO DE COR: Linha divisória do cabeçalho */
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
-        
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        
-        /* ALTERAÇÃO DE COR: Borda esquerda dos blocos de preview */
         .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
         .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
     </style>
@@ -67,7 +59,7 @@
         <select id="selectProdutoConfigurado"></select>
     </div>
     
-    <!-- VARIAÇÃO DE CORES E FURO PARA LAÇO -->
+    <!-- NOVA ORDEM CORRIGIDA: Linha 1 com Impressão / Cores e Acabamento com Ilhós -->
     <div class="row">
         <div class="field">
             <label>Impressão / Cores *</label>
@@ -79,26 +71,26 @@
             </select>
         </div>
         <div class="field">
-            <label>Furo para Laço *</label>
-            <select id="selectFuroLaco">
-                <option value="Não">Não</option>
-                <option value="Sim">Sim</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- ILHÓS E CORDÃO -->
-    <div class="row">
-        <div class="field">
             <label>Acabamento com Ilhós *</label>
             <select id="selectIlhos">
                 <option value="Não">Não</option>
                 <option value="Sim">Sim</option>
             </select>
         </div>
+    </div>
+    
+    <!-- NOVA ORDEM CORRIGIDA: Linha 2 com Tipo de Cordão / Alça e Furo para Laço -->
+    <div class="row">
         <div class="field">
             <label>Tipo de Cordão / Alça *</label>
             <select id="selectCordao"></select>
+        </div>
+        <div class="field">
+            <label>Furo para Laço *</label>
+            <select id="selectFuroLaco">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
         </div>
     </div>
 
@@ -175,8 +167,8 @@ function calcularValoresAtuais() {
     const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
     
     const corSelecionada = document.getElementById("selectCores").value;
-    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     
     let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
     custoUnitario += parseFloat(cordaoSelecionado.dataset.preco || 0);
@@ -205,7 +197,7 @@ function gerarVisualizacaoTela() {
     const dadosComerciais = calcularValoresAtuais();
 
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário Final:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong style="color:#0056b3;">Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
@@ -235,12 +227,10 @@ function abrirImagemNovaAba() {
     
     try { ctx.drawImage(objImgMinha, 35, 30, 130, 50); } catch(e){}
     
-    /* ALTERAÇÃO DE COR NO CANVAS: Linha de divisão superior (Azul da Logo) */
     ctx.strokeStyle = "#0056b3";
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     
-    /* ALTERAÇÃO DE COR NO CANVAS: Título Principal (Azul da Logo) */
     ctx.fillStyle = "#0056b3";
     ctx.font = "bold 15px Arial";
     ctx.textAlign = "left";
@@ -265,18 +255,17 @@ function abrirImagemNovaAba() {
     if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    // ORDEM DA LINHA NO DOCUMENTO: Cores, Ilhós, Alça e Furo Laço
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395);
     ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
     
-    /* ALTERAÇÃO DE COR NO CANVAS: Texto do Total (Azul da Logo) */
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
     ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
     
-    /* ALTERAÇÃO DE COR NO CANVAS: Bloco de Informações Comerciais (Fundo Azul Bem Claro) */
     ctx.fillStyle = "#f0f7ff";
     ctx.fillRect(35, 450, 530, 115);
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
@@ -313,7 +302,6 @@ function abrirImagemNovaAba() {
                 <title>Orçamento Unificado - Imagem</title>
                 <style>
                     body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                    /* ALTERAÇÃO DE COR NA NOVA ABA: Tarja de aviso (Azul da Logo) */
                     .aviso { background: #0056b3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
                     img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
                 </style>
@@ -333,7 +321,6 @@ function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    /* ALTERAÇÃO DE COR NO CANVAS: Borda lateral esquerda dos blocos internos (Azul da Logo) */
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
 }
 </script>

@@ -24,8 +24,14 @@
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
-        .btn-exportar { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
+        /* AJUSTE DOS BOTÕES EM LINHA */
+        .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
+        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
+        
+        /* BOTÃO DO WHATSAPP (COR VERDE PADRÃO) */
+        .btn-whatsapp { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
+        .btn-whatsapp:hover { background: #128C7E; }
         
         /* VISUALIZAÇÃO PRÉVIA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
@@ -48,7 +54,7 @@
         <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
     <div class="row">
-        <div class="field"><label>Telefone *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" required></div>
+        <div class="field"><label>Telefone (Apenas números com DDD) *</label><input type="text" id="telCliente" placeholder="Ex: 11999998888 (Obrigatório)" required></div>
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
     </div>
 
@@ -122,7 +128,12 @@
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
         </div>
         <canvas id="canvasEspelho" style="display:none;"></canvas>
-        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+        
+        <!-- CONTAINER DOS BOTÕES LADO A LADO -->
+        <div class="botoes-container">
+            <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+            <button class="btn-whatsapp" onclick="enviarWhatsAppCliente()">Enviar para Cliente</button>
+        </div>
     </div>
 </div>
 
@@ -204,14 +215,13 @@ function gerarVisualizacaoTela() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function abrirImagemNovaAba() {
+function montarEstruturaCanvas() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
     
     const dadosComerciais = calcularValoresAtuais();
-
     const dataHoje = new Date();
     const dataValidade = new Date();
     dataValidade.setDate(dataHoje.getDate() + 10);
@@ -225,29 +235,18 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // CORREÇÃO DE PROPORÇÃO: Calcula as dimensões dinâmicas da logo para evitar distorções
     try {
-        let maxAlturaLogo = 50; // Limite máximo de altura para o cabeçalho
+        let maxAlturaLogo = 50;
         let larguraOriginal = objImgMinha.naturalWidth || objImgMinha.width || 150;
         let alturaOriginal = objImgMinha.naturalHeight || objImgMinha.height || 55;
-        
-        // Calcula a proporção da imagem (Ex: 150 / 55 = 2.72)
         let proporcaoLogo = larguraOriginal / alturaOriginal; 
-        
-        // Define a largura adaptativa multiplicando a altura máxima pela proporção calculada
         let larguraCalculada = maxAlturaLogo * proporcaoLogo; 
-        
-        // Se a largura calculada ficar muito comprida, limitamos e recalculamos a altura proporcional
         if(larguraCalculada > 220) {
             larguraCalculada = 220;
             maxAlturaLogo = larguraCalculada / proporcaoLogo;
         }
-        
-        // Desenha a logomarca preservando 100% da sua proporção original de fábrica
         ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
-    } catch(e){
-        console.error("Erro ao processar dimensões da logo:", e);
-    }
+    } catch(e){}
     
     ctx.strokeStyle = "#0056b3";
     ctx.lineWidth = 2;
@@ -301,40 +300,66 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center";
     ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
+    
+    return canvas.toDataURL("image/jpeg", 0.98);
+}
 
+function abrirImagemNovaAba() {
+    const dataUrl = montarEstruturaCanvas();
     const novaAba = window.open("", "_blank");
     if (!novaAba) { alert("Pop-up bloqueado pelo navegador! Ative a permissão de pop-ups."); return; }
     
     novaAba.document.write(`
-        <html>
-        <head><title>Processando Orçamento...</title></head>
-        <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
-            <h2>⏳ Processando e gerando o documento final...</h2>
+        <html lang="pt-BR">
+        <head>
+            <title>Orçamento Comercial</title>
+            <style>
+                body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
+                .aviso { background: #0056b3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
+            </style>
+        </head>
+        <body>
+            <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+            <img src="${dataUrl}" />
         </body>
         </html>
     `);
+    novaAba.document.close();
+}
 
+function enviarWhatsAppCliente() {
+    const nome = document.getElementById("nomeCliente").value.trim();
+    let tel = document.getElementById("telCliente").value.trim();
+    
+    // Limpa caracteres especiais do telefone caso o vendedor digite parênteses ou traços
+    tel = tel.replace(/\D/g, '');
+    
+    // Garante que o código do país do Brasil (55) esteja no início se não digitado
+    if (tel.length === 11 || tel.length === 10) {
+        tel = "55" + tel;
+    }
+
+    const dadosComerciais = calcularValoresAtuais();
+    const produtoNome = dadosComerciais.itemSelecionado.text.split(" - ")[0]; // Pega o nome simplificado do item
+
+    // Montagem do texto em formato de mensagem profissional para WhatsApp
+    let textoMensagem = `Olá, *${nome}*! Segue o link com a imagem do seu orçamento digital das embalagens comerciais.\n\n`;
+    textoMensagem += `📦 *Item:* ${produtoNome}\n`;
+    textoMensagem += `🔢 *Quantidade:* ${dadosComerciais.qtd} unidades\n`;
+    textoMensagem += `💰 *Valor Total da Proposta:* R$ ${dadosComerciais.total.toFixed(2)}\n\n`;
+    textoMensagem += `🔗 _Abra o link abaixo ou use o site para visualizar a folha completa da proposta comercial com as marcas e especificações de fábrica._`;
+
+    // Codifica a mensagem para o padrão de links da internet [1]
+    const mensagemFinalUrl = encodeURIComponent(textoMensagem);
+    
+    // Dispara a rotina dupla: primeiro abre a aba de visualização da foto e depois chama o aplicativo do WhatsApp
+    abrirImagemNovaAba();
+    
     setTimeout(() => {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
-        novaAba.document.open();
-        novaAba.document.write(`
-            <html lang="pt-BR">
-            <head>
-                <title>Orçamento Unificado - Imagem</title>
-                <style>
-                    body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                    .aviso { background: #0056b3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
-                    img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
-                </style>
-            </head>
-            <body>
-                <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-                <img src="${dataUrl}" />
-            </body>
-            </html>
-        `);
-        novaAba.document.close();
-    }, 250);
+        const linkWhatsapp = `https://whatsapp.com{tel}&text=${mensagemFinalUrl}`;
+        window.open(linkWhatsapp, "_blank");
+    }, 400);
 }
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {

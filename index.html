@@ -64,11 +64,11 @@
     </div>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
-        <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa" required>
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
     <div class="row">
-        <div class="field"><label>E-mail</label><input type="email" id="emailCliente"></div>
-        <div class="field"><label>Telefone</label><input type="text" id="telCliente"></div>
+        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
+        <div class="field"><label>Telefone *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" required></div>
     </div>
 
     <!-- ITENS -->
@@ -121,14 +121,12 @@
 let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
-// CORREÇÃO: Garante o carregamento correto transformando a imagem em dados inline estáveis
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files[0];
+    const arquivo = event.target.files;
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { 
             logoClienteBase64 = e.target.result;
-            // Atualiza dinamicamente se o orçamento já estiver visível
             const imgPreview = document.getElementById("img-cliente-preview");
             if(imgPreview) imgPreview.src = logoClienteBase64;
         };
@@ -190,11 +188,16 @@ function salvarClienteAutomatico(nome, email, telefone) {
 }
 
 function gerarPropostaCompleta() {
-    const nome = document.getElementById("nomeCliente").value;
-    const email = document.getElementById("emailCliente").value;
-    const tel = document.getElementById("telCliente").value;
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const email = document.getElementById("emailCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
     
-    if(!nome) { alert("Por favor, digite o nome do cliente."); return; }
+    // CORREÇÃO OBRIGATÓRIA: Bloqueia a execução se os campos essenciais estiverem vazios
+    if(!nome || !tel) { 
+        alert("Erro: O Nome do cliente e o Telefone são campos obrigatórios!"); 
+        return; 
+    }
+    
     salvarClienteAutomatico(nome, email, tel);
     
     const tamSelect = document.getElementById("tamanho");
@@ -222,8 +225,6 @@ function gerarPropostaCompleta() {
     dataValidade.setDate(dataHoje.getDate() + 10);
 
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    
-    // RESOLUÇÃO: Tag HTML estruturada para forçar a renderização imediata da imagem inline
     let imgClienteTag = logoClienteBase64 ? `<span>Cliente:</span><img id="img-cliente-preview" src="${logoClienteBase64}">` : '<span>Cliente: [Sem Logo Anexa]</span>';
 
     let htmlOrcamento = `
@@ -237,7 +238,7 @@ function gerarPropostaCompleta() {
         <div class="secao-pdf">
             <div class="secao-titulo">Dados do Cliente</div>
             <div class="recibo-linha"><strong>Nome / Razão Social:</strong> ${nome}</div>
-            <div class="recibo-linha"><strong>Telefone:</strong> ${tel || 'Não informado'} | <strong>E-mail:</strong> ${email || 'Não informado'}</div>
+            <div class="recibo-linha"><strong>Telefone:</strong> ${tel} | <strong>E-mail:</strong> ${email || 'Não informado'}</div>
         </div>
 
         <div class="secao-pdf">
@@ -279,35 +280,49 @@ function gerarPropostaCompleta() {
 function abrirImagemNovaAba() {
     const alvo = document.getElementById("area-orcamento");
     
-    // CORREÇÃO DEFINITIVA: Converte e abre diretamente na nova aba com instruções de salvamento
-    htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff', style: { display: 'block' } })
+    // CORREÇÃO DEFINITIVA ANTI-BLOQUEIO: Abre a aba na hora e coloca aviso de carregamento
+    const novaAba = window.open("", "_blank");
+    if (!novaAba) {
+        alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações do navegador.");
+        return;
+    }
+    
+    novaAba.document.write(`
+        <html>
+        <head><title>Processando Orçamento...</title></head>
+        <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
+            <h2>⏳ Processando e renderizando sua imagem... Aguarde.</h2>
+        </body>
+        </html>
+    `);
+
+    // Inicia o processo de transformar o HTML em foto
+    htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff' })
         .then(function (dataUrl) {
-            const novaAba = window.open();
-            if (novaAba) {
-                novaAba.document.write(`
-                    <html lang="pt-BR">
-                    <head>
-                        <title>Orçamento Comercial - Imagem</title>
-                        <style>
-                            body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                            .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
-                            img { max-width: 90%; max-height: 80vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-                        <img src="${dataUrl}" />
-                    </body>
-                    </html>
-                `);
-                novaAba.document.close();
-            } else {
-                alert("O seu navegador bloqueou a abertura da nova aba. Ative as permissões de pop-up para este site.");
-            }
+            // Injeta o resultado final com as logos na aba já aberta
+            novaAba.document.open();
+            novaAba.document.write(`
+                <html lang="pt-BR">
+                <head>
+                    <title>Orçamento Comercial - Imagem</title>
+                    <style>
+                        body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
+                        .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                        img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
+                    </style>
+                </head>
+                <body>
+                    <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+                    <img src="${dataUrl}" />
+                </body>
+                </html>
+            `);
+            novaAba.document.close();
         })
         .catch(function (error) {
-            alert('Erro ao processar imagem da logo. Certifique-se de usar arquivos JPG ou PNG válidos.');
-            console.error('Erro de conversão:', error);
+            novaAba.close();
+            alert('Houve um erro técnico de leitura do arquivo de imagem da logo do cliente.');
+            console.error(error);
         });
 }
 </script>

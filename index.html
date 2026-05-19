@@ -18,19 +18,29 @@
         .field { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
-        input:focus, select:focus { border-color: #ba1cb3; }
         
-        .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
-        .btn-principal:hover { background: #9e1497; }
-        .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
-        .btn-exportar:hover { background: #0097a7; }
+        /* ALTERAÇÃO DE COR: Borda do campo em foco (Azul da Logo) */
+        input:focus, select:focus { border-color: #0056b3; }
+        
+        /* ALTERAÇÃO DE COR: Botão Principal (Azul Escuro da Logo) */
+        .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
+        .btn-principal:hover { background: #002244; }
+        
+        /* ALTERAÇÃO DE COR: Botão Exportar (Azul Médio da Logo) */
+        .btn-exportar { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
+        .btn-exportar:hover { background: #004085; }
         
         /* VISUALIZAÇÃO PRÉVIA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
+        
+        /* ALTERAÇÃO DE COR: Linha divisória do cabeçalho */
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
+        
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; font-size: 13px; line-height: 1.5; }
+        
+        /* ALTERAÇÃO DE COR: Borda esquerda dos blocos de preview */
+        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
         .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
     </style>
 </head>
@@ -50,7 +60,7 @@
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
     </div>
 
-    <!-- CONFIGURAÇÃO DE ITENS -->
+    <!-- ITENS -->
     <h2>Itens do orçamento</h2>
     <div class="field" style="margin-bottom: 12px;">
         <label>Configuração do Produto Base *</label>
@@ -80,7 +90,7 @@
     <!-- ILHÓS E CORDÃO -->
     <div class="row">
         <div class="field">
-            <label>Enobrecimento: Ilhós *</label>
+            <label>Acabamento com Ilhós *</label>
             <select id="selectIlhos">
                 <option value="Não">Não</option>
                 <option value="Sim">Sim</option>
@@ -114,7 +124,7 @@
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
             </div>
-            <div style="font-size:15px; font-weight:bold; color:#ba1cb3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
+            <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
@@ -196,7 +206,7 @@ function gerarVisualizacaoTela() {
 
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário Final:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong style="color:#ba1cb3;">Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário Final:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong style="color:#0056b3;">Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
@@ -225,11 +235,13 @@ function abrirImagemNovaAba() {
     
     try { ctx.drawImage(objImgMinha, 35, 30, 130, 50); } catch(e){}
     
-    ctx.strokeStyle = "#ba1cb3";
+    /* ALTERAÇÃO DE COR NO CANVAS: Linha de divisão superior (Azul da Logo) */
+    ctx.strokeStyle = "#0056b3";
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     
-    ctx.fillStyle = "#ba1cb3";
+    /* ALTERAÇÃO DE COR NO CANVAS: Título Principal (Azul da Logo) */
+    ctx.fillStyle = "#0056b3";
     ctx.font = "bold 15px Arial";
     ctx.textAlign = "left";
     ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
@@ -252,20 +264,23 @@ function abrirImagemNovaAba() {
     ctx.fillText("• " + linha1, 50, 290);
     if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
-    ctx.font = "bold 11px Arial"; ctx.fillText("Adicionais de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+    ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
     ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395);
     ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
-    ctx.fillStyle = "#ba1cb3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
+    
+    /* ALTERAÇÃO DE COR NO CANVAS: Texto do Total (Azul da Logo) */
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
     ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
     
-    ctx.fillStyle = "#fff2fd";
+    /* ALTERAÇÃO DE COR NO CANVAS: Bloco de Informações Comerciais (Fundo Azul Bem Claro) */
+    ctx.fillStyle = "#f0f7ff";
     ctx.fillRect(35, 450, 530, 115);
-    ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
-    ctx.fillStyle = "#ba1cb3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left";
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left";
     ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
     ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
     ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 495);
@@ -275,7 +290,7 @@ function abrirImagemNovaAba() {
     
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center";
     ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); stroke();
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
 
     const novaAba = window.open("", "_blank");
     if (!novaAba) { alert("Pop-up bloqueado pelo navegador! Ative a permissão de pop-ups."); return; }
@@ -298,7 +313,8 @@ function abrirImagemNovaAba() {
                 <title>Orçamento Unificado - Imagem</title>
                 <style>
                     body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                    .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                    /* ALTERAÇÃO DE COR NA NOVA ABA: Tarja de aviso (Azul da Logo) */
+                    .aviso { background: #0056b3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
                     img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
                 </style>
             </head>
@@ -317,7 +333,8 @@ function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+    /* ALTERAÇÃO DE COR NO CANVAS: Borda lateral esquerda dos blocos internos (Azul da Logo) */
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
 }
 </script>
 </body>

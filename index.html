@@ -257,7 +257,30 @@ function abrirImagemNovaAba() {
     const novaAba = window.open("", "_blank");
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
-        novaAba.document.write(`<html><body style="margin:0;background:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="${dataUrl}" style="max-width:95%;max-height:85vh;box-shadow:0 5px 25px rgba(0,0,0,0.5);background:white;" /></body></html>`);
+        
+        // Nome limpo sugerido para salvar o arquivo baixado
+        const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
+
+        novaAba.document.write(`
+            <html>
+            <head>
+                <title>Exportar Orçamento</title>
+                <style>
+                    body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
+                    img { max-width:95%; max-height:80vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
+                    .btn-container { width: 100%; display: flex; justify-content: center; }
+                    .btn-download { background: #25D366; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
+                    .btn-download:hover { background: #128C7E; }
+                </style>
+            </head>
+            <body>
+                <img src="${dataUrl}" />
+                <div class="btn-container">
+                    <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Descarregar Arquivo</a>
+                </div>
+            </body>
+            </html>
+        `);
         novaAba.document.close();
     }
 }

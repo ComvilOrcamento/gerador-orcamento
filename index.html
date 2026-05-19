@@ -122,7 +122,6 @@
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
         </div>
         <canvas id="canvasEspelho" style="display:none;"></canvas>
-        <!-- TEXTO DO BOTÃO ALTERADO PARA EXPORTAR ORÇAMENTO -->
         <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
     </div>
 </div>
@@ -226,7 +225,29 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    try { ctx.drawImage(objImgMinha, 35, 30, 130, 50); } catch(e){}
+    // CORREÇÃO DE PROPORÇÃO: Calcula as dimensões dinâmicas da logo para evitar distorções
+    try {
+        let maxAlturaLogo = 50; // Limite máximo de altura para o cabeçalho
+        let larguraOriginal = objImgMinha.naturalWidth || objImgMinha.width || 150;
+        let alturaOriginal = objImgMinha.naturalHeight || objImgMinha.height || 55;
+        
+        // Calcula a proporção da imagem (Ex: 150 / 55 = 2.72)
+        let proporcaoLogo = larguraOriginal / alturaOriginal; 
+        
+        // Define a largura adaptativa multiplicando a altura máxima pela proporção calculada
+        let larguraCalculada = maxAlturaLogo * proporcaoLogo; 
+        
+        // Se a largura calculada ficar muito comprida, limitamos e recalculamos a altura proporcional
+        if(larguraCalculada > 220) {
+            larguraCalculada = 220;
+            maxAlturaLogo = larguraCalculada / proporcaoLogo;
+        }
+        
+        // Desenha a logomarca preservando 100% da sua proporção original de fábrica
+        ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
+    } catch(e){
+        console.error("Erro ao processar dimensões da logo:", e);
+    }
     
     ctx.strokeStyle = "#0056b3";
     ctx.lineWidth = 2;

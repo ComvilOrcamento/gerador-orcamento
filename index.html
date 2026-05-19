@@ -24,8 +24,9 @@
         /* ESTILO DA FOLHA DO ORÇAMENTO */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
-        .logo-box { flex: 1; }
+        .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
+        .cliente-box { justify-content: flex-end; gap: 8px; font-size: 12px; font-weight: bold; color: #555; }
         .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; }
         .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
@@ -124,9 +125,8 @@
 let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
 
-// Resolve o erro da imagem sumir convertendo o arquivo para dados binários puros na memória
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files[0];
+    const arquivo = event.target.files;
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { 
@@ -184,7 +184,7 @@ function salvarClienteAutomatico(nome, email, telefone) {
     if (!nome) return;
     const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
     if (!jaExiste) {
-        const novoCliente = { nome, email, telephone: telefone };
+        const novoCliente = { nome, email, telephone: telephone };
         let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
         historicoLocal.push(novoCliente);
         localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
@@ -226,12 +226,12 @@ function gerarPropostaCompleta() {
     dataValidade.setDate(dataHoje.getDate() + 10);
 
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Sem Logo Anexa</span>';
+    let imgClienteTag = logoClienteBase64 ? `<span>Cliente:</span><img src="${logoClienteBase64}">` : '<span>Cliente: [Sem Logo Anexa]</span>';
 
     let htmlOrcamento = `
         <div class="logos-header">
             <div class="logo-box">${imgMinhaTag}</div>
-            <div class="logo-box" style="text-align:right;">${imgClienteTag}</div>
+            <div class="logo-box cliente-box">${imgClienteTag}</div>
         </div>
         
         <div style="font-size: 15px; font-weight: bold; color: #ba1cb3; margin-bottom: 15px; text-transform: uppercase;">Proposta Comercial</div>
@@ -263,7 +263,9 @@ function gerarPropostaCompleta() {
         
         <div class="secao-pdf" style="background:#fff2fd; border-left:3px solid #ba1cb3; padding:10px;">
             <div class="recibo-linha" style="color:#ba1cb3; font-weight:bold; font-size:11px;">⚠️ CONDIÇÕES COMERCIAIS</div>
-            <div class="recibo-linha" style="font-size:11px;">• Esta proposta tem **tempo de validade por 10 dias**, expirando obrigatoriamente em: <strong>${dataValidade.toLocaleDateString('pt-BR')}</strong>.</div>
+            <div class="recibo-linha" style="font-size:11px;">• <strong>Validade da Proposta:</strong> Válido por 10 dias (expira obrigatoriamente em: <strong>${dataValidade.toLocaleDateString('pt-BR')}</strong>).</div>
+            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Forma de Pagamento:</strong> 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.</div>
+            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Prazo de Produção:</strong> 20 dias úteis a partir da aprovação final do layout digital e pagamento da entrada.</div>
         </div>
         
         <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
@@ -277,7 +279,6 @@ function gerarPropostaCompleta() {
 }
 
 function exportarImprimir() {
-    // Comando nativo e blindado contra erros: abre instantaneamente a janela de salvamento e preserva as imagens carregadas
     window.print();
 }
 </script>

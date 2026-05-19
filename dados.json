@@ -2,26 +2,26 @@
   "produtosConfigurados": [
     {
       "id": 1,
-      "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - 4x0 - Plastificação Brilho",
-      "detalhes": "Sacola | Tam: 25x35x10 | Papel Duplex 240g | Cores: 4x0 | Acabamento: Plastificação Brilho",
+      "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho",
+      "detalhes": "Sacola | Tam: 25x35x10 | Papel Duplex 240g | Acabamento: Plastificação Brilho",
       "precoBase": 4.00
     },
     {
       "id": 2,
-      "nomeCompleto": "Sacola Offset 180g - 18x24x8 - 2x0 - Laminação BOPP Fosca + Hot Stamping",
-      "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Cores: 2x0 | Acabamento: Laminação BOPP Fosca, Hot Stamping",
+      "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca + Hot Stamping",
+      "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca, Hot Stamping",
       "precoBase": 4.50
     },
     {
       "id": 3,
-      "nomeCompleto": "Sacola Kraft 180g - 30x40x12 - 4x0 - Sem Ennobrecimento + Verniz Local",
-      "detalhes": "Sacola | Tam: 30x40x12 | Papel Kraft 180g | Cores: 4x0 | Acabamento: Verniz Local",
+      "nomeCompleto": "Sacola Kraft 180g - 30x40x12 - Sem Ennobrecimento + Verniz Local",
+      "detalhes": "Sacola | Tam: 30x40x12 | Papel Kraft 180g | Acabamento: Verniz Local",
       "precoBase": 3.50
     },
     {
       "id": 4,
-      "nomeCompleto": "Caixa Duplex 240g - 20x20x5 - 4x0 - Laminação BOPP Fosca + Verniz Local",
-      "detalhes": "Caixa | Tam: 20x20x5 | Papel Duplex 240g | Cores: 4x0 | Acabamento: Laminação BOPP Fosca, Verniz Local",
+      "nomeCompleto": "Caixa Duplex 240g - 20x20x5 - Laminação BOPP Fosca + Verniz Local",
+      "detalhes": "Caixa | Tam: 20x20x5 | Papel Duplex 240g | Acabamento: Laminação BOPP Fosca, Verniz Local",
       "precoBase": 6.00
     }
   ],
@@ -32,6 +32,13 @@
     { "nome": "São Francisco", "preco": 0.90 }
   ],
   "valoresAcabamento": {
-    "ilhos": 0.20
+    "ilhos": 0.20,
+    "furoLaco": 0.15,
+    "cores": {
+      "1x0": 0.00,
+      "2x0": 0.15,
+      "4x0": 0.40,
+      "4x1": 0.55
+    }
   }
 }

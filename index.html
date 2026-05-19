@@ -303,6 +303,343 @@ function enviarOrcamentoEmailAutomatico() {
 
     // ENVIO SILENCIOSO VIA REQUISIÇÃO AJAX (NÃO ABRE PROGRAMA NENHUM)
     // ATENÇÃO: Substitua o link abaixo pelo link gerado no Passo 1
+    fetch("https://formspree.io", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(dadosFormulario)
+    })
+    .then(response => {
+        if (response.ok) {
+            btn.innerText = "✓ Enviado com Sucesso!";
+            btn.style.background = "#155724";
+            alert("Sucesso! O orçamento foi processado e o e-mail foi enviado automaticamente para o cliente e para a Comvil.");
+        } else {
+            throw new Error("Falha no servidor");
+        }
+    })
+    .catch(error => {
+        btn.innerText = "Erro ao enviar";
+        btn.style.background = "#721c24";
+        btn.disabled = false;
+        alert("Erro no envio automático. Certifique-se de ter configurado o link do Formspree corretamente.");
+    });
+}
+
+function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
+    ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
+    ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+}
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <script src="https://cloudflare.com"></script>
+    
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
+        h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .row { display: flex; gap: 15px; margin-bottom: 12px; }
+        .field { flex: 1; display: flex; flex-direction: column; }
+        label { font-size: 11px; margin-bottom: 4px; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+        
+        input:focus, select:focus { border-color: #0056b3; }
+        
+        .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
+        .btn-principal:hover { background: #002244; }
+        
+        .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
+        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .btn-exportar:hover { background: #004085; }
+        
+        .btn-email { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
+        .btn-email:hover { background: #128C7E; }
+        
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
+        .logo-box { flex: 1; display: flex; align-items: center; }
+        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
+        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
+        .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Novo Orçamento</h1>
+
+    <h2>Dados do cliente</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Nome *</label>
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
+    </div>
+    <div class="row">
+        <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
+        <div class="field"><label>E-mail *</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Obrigatório)" required></div>
+    </div>
+
+    <h2>Itens do orçamento</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Configuração do Produto Base *</label>
+        <select id="selectProdutoConfigurado"></select>
+    </div>
+    
+    <div class="row">
+        <div class="field">
+            <label>Impressão / Cores *</label>
+            <select id="selectCores">
+                <option value="1x0">1x0</option>
+                <option value="2x0">2x0</option>
+                <option value="4x0">4x0</option>
+                <option value="4x1">4x1</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Acabamento com Ilhós *</label>
+            <select id="selectIlhos">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="field">
+            <label>Tipo de Cordão / Alça *</label>
+            <select id="selectCordao"></select>
+        </div>
+        <div class="field">
+            <label>Furo para Laço *</label>
+            <select id="selectFuroLaco">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Quantidade Mínima *</label>
+        <select id="qtd">
+            <option value="500">500 un</option>
+            <option value="1000">1000 un</option>
+            <option value="2000">2000 un</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Nome do vendedor</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
+    </div>
+
+    <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
+
+    <div id="bloco-resultado" style="display: none;">
+        <div id="area-orcamento">
+            <div class="logos-header">
+                <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
+            </div>
+            <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
+            <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
+            <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
+            <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
+        </div>
+        <canvas id="canvasEspelho" style="display:none;"></canvas>
+        
+        <div class="botoes-container">
+            <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+            <button class="btn-email" id="btnDisparoEmail" onclick="enviarOrcamentoEmailAutomatico()">Enviar Orçamento</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let database = { produtosConfigurados: [], cordoes: [], valoresAcabamento: {} };
+let objImgMinha = new Image();
+
+objImgMinha.src = "logo-empresa.png";
+objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
+
+function mascaraTelefone(input) {
+    let v = input.value.replace(/\D/g, "");
+    v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+    v = v.replace(/(\d)(\d{4})$/g, "$1-$2");
+    input.value = v;
+}
+
+const bancoReserva = {
+  "produtosConfigurados": [
+    { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "detalhes": "Sacola | Tam: 25x35x10 | Papel Duplex 240g | Acabamento: Plastificação Brilho", "precoBase": 4.00 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca", "precoBase": 4.50 }
+  ],
+  "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4 } }
+};
+
+window.onload = function() {
+    fetch('dados.json')
+        .then(response => response.json())
+        .then(data => { database = data; carregarMenusUnificados(); })
+        .catch(error => { database = bancoReserva; carregarMenusUnificados(); });
+};
+
+function carregarMenusUnificados() {
+    const produtoSel = document.getElementById("selectProdutoConfigurado");
+    produtoSel.innerHTML = '';
+    database.produtosConfigurados.forEach((prod) => {
+        let opt = new Option(prod.nomeCompleto, prod.id);
+        opt.dataset.detalhes = prod.detalhes;
+        opt.dataset.preco = prod.precoBase;
+        produtoSel.add(opt);
+    });
+    const cordaoSel = document.getElementById("selectCordao");
+    cordaoSel.innerHTML = '';
+    database.cordoes.forEach((c) => {
+        let opt = new Option(c.nome, c.nome);
+        opt.dataset.preco = c.preco;
+        cordaoSel.add(opt);
+    });
+}
+
+function calcularValoresAtuais() {
+    const prodSel = document.getElementById("selectProdutoConfigurado");
+    const itemSelecionado = prodSel.options[prodSel.selectedIndex];
+    const cordaoSel = document.getElementById("selectCordao");
+    const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
+    const corSelecionada = document.getElementById("selectCores").value;
+    const temIlhos = document.getElementById("selectIlhos").value === "Sim";
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
+    
+    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0) + parseFloat(cordaoSelecionado.dataset.preco || 0);
+    if(database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
+    if(temFuroLaco) custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
+    if(temIlhos) custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
+    
+    const qtd = parseInt(document.getElementById("qtd").value);
+    return { custoUnitario, qtd, total: custoUnitario * qtd, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
+}
+
+function gerarVisualizacaoTela() {
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
+    const email = document.getElementById("emailCliente").value.trim();
+    if(!nome || !tel || !email) { alert("Erro: Nome, Telefone e E-mail do cliente são obrigatórios!"); return; }
+    
+    const dadosComerciais = calcularValoresAtuais();
+    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong>Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
+    
+    document.getElementById("area-orcamento").style.display = "block";
+    document.getElementById("bloco-resultado").style.display = "block";
+}
+
+function abrirImagemNovaAba() {
+    // Código de montagem gráfica do Canvas mantido idêntico para a exportação paralela
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const email = document.getElementById("emailCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
+    const dadosComerciais = calcularValoresAtuais();
+    const dataHoje = new Date();
+    const dataValidade = new Date();
+    dataValidade.setDate(dataHoje.getDate() + 10);
+    const canvas = document.getElementById("canvasEspelho");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 600; canvas.height = 780;
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    try {
+        let maxAlturaLogo = 50;
+        let larguraOriginal = objImgMinha.naturalWidth || objImgMinha.width || 150;
+        let alturaOriginal = objImgMinha.naturalHeight || objImgMinha.height || 55;
+        let proporcaoLogo = larguraOriginal / alturaOriginal; 
+        let larguraCalculada = maxAlturaLogo * proporcaoLogo; 
+        if(larguraCalculada > 220) { larguraCalculada = 220; maxAlturaLogo = larguraCalculada / proporcaoLogo; }
+        ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
+    } catch(e){}
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
+    desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
+    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + tel + "  |  E-mail: " + email, 50, 203);
+    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
+    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
+    let detalhesTexto = dadosComerciais.itemSelecionado.dataset.detalhes;
+    let partes = detalhesTexto.split(" | ");
+    ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
+    if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
+    ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
+    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
+    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 115); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
+    ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 495);
+    ctx.fillText("• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, 515);
+    ctx.fillText("• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
+    ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 555);
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
+
+    const novaAba = window.open("", "_blank");
+    if (novaAba) {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
+        novaAba.document.write(`<html><body style="margin:0;background:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="${dataUrl}" style="max-width:95%;max-height:85vh;box-shadow:0 5px 25px rgba(0,0,0,0.5);background:white;" /></body></html>`);
+        novaAba.document.close();
+    }
+}
+
+// NOVA ROTINA AUTOMÁTICA: Envia os dados direto em background via API sem abrir janelas
+function enviarOrcamentoEmailAutomatico() {
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const emailCliente = document.getElementById("emailCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
+    
+    const dadosComerciais = calcularValoresAtuais();
+    const dataValidade = new Date();
+    dataValidade.setDate(new Date().getDate() + 10);
+
+    const btn = document.getElementById("btnDisparoEmail");
+    btn.innerText = "⏳ Enviando...";
+    btn.disabled = true;
+
+    // Prepara a carga de dados estruturada que a API vai despachar
+    const dadosFormulario = {
+        "Cliente_Nome": nome,
+        "Cliente_Email": emailCliente,
+        "Cliente_Telefone": tel,
+        "Vendedor": vendedor,
+        "Produto_Base": dadosComerciais.itemSelecionado.text,
+        "Cores_Impressao": dadosComerciais.corSelecionada,
+        "Ilhos": dadosComerciais.temIlhos ? "Sim" : "Não",
+        "Cordao_Alca": dadosComerciais.cordaoSelecionado.value,
+        "Furo_Laço": dadosComerciais.temFuroLaco ? "Sim" : "Não",
+        "Quantidade": dadosComerciais.qtd,
+        "Preco_Unitario": "R$ " + dadosComerciais.custoUnitario.toFixed(2),
+        "VALOR_TOTAL": "R$ " + dadosComerciais.total.toFixed(2),
+        "Validade_Proposta": dataValidade.toLocaleDateString('pt-BR'),
+        "_replyto": emailCliente, // Faz com que se você responder o e-mail, vá para o cliente
+        "_subject": `Orçamento de Embalagens Aprovado - ${nome}`
+    };
+
+    // ENVIO SILENCIOSO VIA REQUISIÇÃO AJAX (NÃO ABRE PROGRAMA NENHUM)
+    // ATENÇÃO: Substitua o link abaixo pelo link gerado no Passo 1
     fetch("https://formspree.io/f/xojbjwny", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Orçamento Automatizado</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
+        h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .row { display: flex; gap: 15px; margin-bottom: 12px; }
+        .field { flex: 1; display: flex; flex-direction: column; }
+        label { font-size: 11px; margin-bottom: 4px; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+        input:focus, select:focus { border-color: #ba1cb3; }
+        .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
+        .btn-principal:hover { background: #9e1497; }
+        .btn-exportar { background: #ba1cb3; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; }
+        .btn-exportar:hover { background: #9e1497; }
+        textarea { height: 120px; resize: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Novo Orçamento</h1>
+
+    <!-- DADOS DO CLIENTE -->
+    <h2>Dados do cliente</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Buscar Cliente Cadastrado</label>
+        <select id="selectCliente" onchange="selecionarCliente()">
+            <option value="">-- Selecione um cliente ou digite abaixo --</option>
+        </select>
+    </div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Nome *</label>
+        <input type="text" id="nomeCliente" placeholder="Nome completo do cliente" required>
+    </div>
+    <div class="row">
+        <div class="field">
+            <label>E-mail</label>
+            <input type="email" id="emailCliente" placeholder="email@exemplo.com">
+        </div>
+        <div class="field">
+            <label>Telefone</label>
+            <input type="text" id="telCliente" placeholder="(00) 00000-0000">
+        </div>
+    </div>
+
+    <!-- ITENS DO ORÇAMENTO -->
+    <h2>Itens do orçamento</h2>
+    <div class="row">
+        <div class="field">
+            <label>Produto</label>
+            <select id="produto"></select>
+        </div>
+        <div class="field">
+            <label>Tipo - Tamanho</label>
+            <select id="tamanho"></select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="field">
+            <label>Papel</label>
+            <select id="papel"></select>
+        </div>
+        <div class="field">
+            <label>Gramatura</label>
+            <select id="gramatura">
+                <option value="180g">180g</option>
+                <option value="240g">240g</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="field">
+            <label>Cores</label>
+            <select id="cores">
+                <option value="2x0">2x0</option>
+                <option value="4x0">4x0</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Cordão</label>
+            <select id="cordao"></select>
+        </div>
+    </div>
+
+    <!-- ACABAMENTOS / ENNOBRECIMENTO -->
+    <h2>Ennobrecimento</h2>
+    <div class="row">
+        <div class="field"><label>Plastificação</label><select id="plastificacao"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+        <div class="field"><label>Laminação BOPP</label><select id="laminacao"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+    </div>
+    <div class="row">
+        <div class="field"><label>Ilhós</label><select id="ilhos"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+        <div class="field"><label>Verniz Local</label><select id="verniz"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+    </div>
+    <div class="row">
+        <div class="field"><label>Hot Stamping</label><select id="hotstamping"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+        <div class="field"><label>Gofragem</label><select id="gofragem"><option value="Não">Não</option><option value="Casca de ovo">Casca de ovo</option></select></div>
+    </div>
+    <div class="row">
+        <div class="field"><label>Furo Laço</label><select id="furo"><option value="Não">Não</option><option value="2x0">2x0</option></select></div>
+        <div class="field"><label>Quantidade Mínima</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
+    </div>
+
+    <!-- VENDEDOR -->
+    <h2>Vendedor</h2>
+    <div class="field">
+        <label>Nome do vendedor</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome">
+    </div>
+
+    <button class="btn-principal" onclick="calcularOrcamento()">Gerar Orçamento</button>
+
+    <!-- RESULTADO DO ORÇAMENTO -->
+    <h2>Orçamento</h2>
+    <div class="field">
+        <textarea id="resultado" readonly placeholder="Descrição do Produto"></textarea>
+    </div>
+    <button class="btn-exportar" onclick="exportarTxt()">Exportar</button>
+    <div style="clear: both;"></div>
+</div>
+
+<script>
+let bancoDados = {};
+
+// Carrega a fonte de dados do arquivo JSON externo ao abrir a página
+window.onload = function() {
+    fetch('dados.json')
+        .then(response => response.json())
+        .then(data => {
+            bancoDados = data;
+            carregarMenus();
+        })
+        .catch(error => console.error("Erro ao carregar banco de dados:", error));
+};
+
+function carregarMenus() {
+    // Alimenta Clientes
+    const clienteSel = document.getElementById("selectCliente");
+    bancoDados.clientes.forEach((c, index) => {
+        clienteSel.options[clienteSel.options.length] = new Option(c.nome, index);
+    });
+
+    // Alimenta Produtos
+    const prodSel = document.getElementById("produto");
+    bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
+
+    // Alimenta Tamanhos
+    const tamSel = document.getElementById("tamanho");
+    bancoDados.tamanhos.forEach(t => {
+        let opt = new Option(t.nome, t.nome);
+        opt.dataset.preco = t.preco;
+        tamSel.add(opt);
+    });
+
+    // Alimenta Papéis
+    const papelSel = document.getElementById("papel");
+    bancoDados.papeis.forEach(p => {
+        let opt = new Option(p.nome, p.nome);
+        opt.dataset.preco = p.preco;
+        papelSel.add(opt);
+    });
+
+    // Alimenta Cordões
+    const cordaoSel = document.getElementById("cordao");
+    bancoDados.cordoes.forEach(c => {
+        let opt = new Option(c.nome, c.nome);
+        opt.dataset.preco = c.preco;
+        cordaoSel.add(opt);
+    });
+}
+
+function selecionarCliente() {
+    const idx = document.getElementById("selectCliente").value;
+    if(idx !== "") {
+        const cliente = bancoDados.clientes[idx];
+        document.getElementById("nomeCliente").value = cliente.nome;
+        document.getElementById("emailCliente").value = cliente.email;
+        document.getElementById("telCliente").value = cliente.telefone;
+    }
+}
+
+function calcularOrcamento() {
+    const tamSelect = document.getElementById("tamanho");
+    const papelSelect = document.getElementById("papel");
+    const cordaoSelect = document.getElementById("cordao");
+    
+    let custoUnitario = 0;
+    custoUnitario += parseFloat(tamSelect.options[tamSelect.selectedIndex].dataset.preco || 0);
+    custoUnitario += parseFloat(papelSelect.options[papelSelect.selectedIndex].dataset.preco || 0);
+    custoUnitario += parseFloat(cordaoSelect.options[cordaoSelect.selectedIndex].dataset.preco || 0);
+    
+    // Calcula adicionais dinâmicos mapeados do objeto valoresAcabamento do JSON
+    const tabelaAcabamentos = bancoDados.valoresAcabamento;
+    if(document.getElementById("plastificacao").value === "Sim") custoUnitario += tabelaAcabamentos.plastificacao;
+    if(document.getElementById("laminacao").value === "Sim") custoUnitario += tabelaAcabamentos.laminacao;
+    if(document.getElementById("ilhos").value === "Sim") custoUnitario += tabelaAcabamentos.ilhos;
+    if(document.getElementById("verniz").value === "Sim") custoUnitario += tabelaAcabamentos.verniz;
+    if(document.getElementById("hotstamping").value === "Sim") custoUnitario += tabelaAcabamentos.hotstamping;
+    if(document.getElementById("gofragem").value !== "Não") custoUnitario += tabelaAcabamentos.gofragem;
+
+    const qtd = parseInt(document.getElementById("qtd").value);
+    const valorTotal = custoUnitario * qtd;
+
+    let textoOrcamento = `ORÇAMENTO COMERCIAL\n`;
+    textoOrcamento += `Cliente: ${document.getElementById("nomeCliente").value || 'Não informado'}\n`;
+    textoOrcamento += `Vendedor: ${document.getElementById("nomeVendedor").value || 'Não informado'}\n`;
+    textoOrcamento += `-------------------------------------------\n`;
+    textoOrcamento += `Produto: ${document.getElementById("produto").value} ${tamSelect.value}\n`;
+    textoOrcamento += `Papel: ${papelSelect.value} ${document.getElementById("gramatura").value} | Cores: ${document.getElementById("cores").value}\n`;
+    textoOrcamento += `Quantidade: ${qtd} unidades\n`;
+    textoOrcamento += `Valor Unitário Estimado: R$ ${custoUnitario.toFixed(2)}\n`;
+    textoOrcamento += `VALOR TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}`;
+
+    document.getElementById("resultado").value = textoOrcamento;
+}
+
+function exportarTxt() {
+    const texto = document.getElementById("resultado").value;
+    if(!texto) return alert("Gere um orçamento primeiro!");
+    const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Orcamento_${document.getElementById("nomeCliente").value || 'Cliente'}.txt`;
+    link.click();
+}
+</script>
+</body>
+</html>

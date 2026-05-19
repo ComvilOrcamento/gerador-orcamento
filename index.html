@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
-    
-    <!-- BIBLIOTECA MODERNA PARA CONVERTER HTML EM IMAGEM JPG IMEDIATAMENTE -->
-    <script src="https://cloudflare.com"></script>
-    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -26,7 +22,7 @@
         .btn-exportar:hover { background: #0097a7; }
         
         /* ESTILO DA FOLHA DO ORÇAMENTO */
-        #area-orcamento { background: #ffffff; padding: 30px; margin-top: 15px; display: none; color: #333; width: 100%; max-width: 540px; }
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
@@ -40,6 +36,14 @@
         .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
         .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
         .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
+
+        /* REGRAS DE IMPRESSÃO AUTOMÁTICA EM PDF */
+        @media print {
+            body { background: white; padding: 0; }
+            .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
+            #bloco-resultado, #area-orcamento { display: block !important; border: none !important; padding: 0 !important; width: 100% !important; }
+            #area-orcamento img { max-height: 55px !important; width: auto !important; display: block !important; }
+        }
     </style>
 </head>
 <body>
@@ -113,7 +117,7 @@
         <div id="area-orcamento">
             <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="exportarJpgDireto()">Exportar Orçamento em JPG</button>
+        <button class="btn-exportar" onclick="exportarImprimir()">Exportar Orçamento Agora</button>
     </div>
 </div>
 
@@ -125,7 +129,9 @@ function carregarLogoCliente(event) {
     const arquivo = event.target.files;
     if (arquivo) {
         const reader = new FileReader();
-        reader.onload = function(e) { logoClienteBase64 = e.target.result; };
+        reader.onload = function(e) { 
+            logoClienteBase64 = e.target.result; 
+        };
         reader.readAsDataURL(arquivo);
     }
 }
@@ -146,15 +152,19 @@ function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
     clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
     bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
+    
     const prodSel = document.getElementById("produto");
     prodSel.innerHTML = '';
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
+    
     const tamSel = document.getElementById("tamanho");
     tamSel.innerHTML = '';
     bancoDados.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
+    
     const papelSel = document.getElementById("papel");
     papelSel.innerHTML = '';
     bancoDados.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
+    
     const cordaoSel = document.getElementById("cordao");
     cordaoSel.innerHTML = '';
     bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
@@ -268,22 +278,8 @@ function gerarPropostaCompleta() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarJpgDireto() {
-    const alvo = document.getElementById("area-orcamento");
-    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
-    
-    // Transforma o HTML diretamente em uma imagem digital JPG limpa
-    htmlToImage.toJpeg(alvo, { quality: 0.95, bgcolor: '#ffffff' })
-        .then(function (dataUrl) {
-            const link = document.createElement('a');
-            link.download = `Orcamento_${nomeCliente}.jpg`;
-            link.href = dataUrl;
-            link.click();
-        })
-        .catch(function (error) {
-            alert('Houve um problema ao salvar a imagem automaticamente. Tente novamente.');
-            console.error('Erro de conversão:', error);
-        });
+function exportarImprimir() {
+    window.print();
 }
 </script>
 </body>

@@ -29,9 +29,9 @@
         .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
         
-        /* BOTÃO DO WHATSAPP COORDENADO */
-        .btn-whatsapp { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
-        .btn-whatsapp:hover { background: #128C7E; }
+        /* BOTÃO DE E-MAIL (MODIFICADO: TOM VERDE CORPORATIVO PARA DESTACAR AÇÃO) */
+        .btn-email { flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
+        .btn-email:hover { background: #128C7E; }
         
         /* VISUALIZAÇÃO PRÉVIA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
@@ -131,7 +131,8 @@
         
         <div class="botoes-container">
             <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
-            <button class="btn-whatsapp" onclick="enviarWhatsAppCliente()">Enviar para Cliente</button>
+            <!-- BOTÃO ALTERADO: Executa a rotina profissional de e-mail -->
+            <button class="btn-email" onclick="enviarOrcamentoEmail()">Enviar Orçamento por E-mail</button>
         </div>
     </div>
 </div>
@@ -278,7 +279,7 @@ function montarEstruturaCanvas() {
     let linha1 = partes.slice(0, 4).join(" | ");
     let linha2 = partes.slice(4).join(" | ");
     
-    ctx.fillText("• " + linha1, 50, 290);
+    ctx.fillText("• " + inline1 = linha1, 50, 290);
     if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
@@ -334,27 +335,56 @@ function abrirImagemNovaAba() {
     novaAba.document.close();
 }
 
-function enviarWhatsAppCliente() {
-    let tel = document.getElementById("telCliente").value.trim();
+// NOVA FUNÇÃO: Dispara a rotina de envio automatizado por e-mail
+function enviarOrcamentoEmail() {
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const emailCliente = document.getElementById("emailCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
     
-    // CORREÇÃO: Limpa parênteses, traços e espaços, mantendo apenas os números puros do DDD + telefone
-    tel = tel.replace(/\D/g, '');
-    
-    if(!tel) { alert("Erro: Digite um número de telefone válido."); return; }
+    const dadosComerciais = calcularValoresAtuais();
+    const dataHoje = new Date();
+    const dataValidade = new Date();
+    dataValidade.setDate(dataHoje.getDate() + 10);
 
-    // CORREÇÃO: Trata se o vendedor já digitou o 55 no formulário ou não, removendo o excesso
-    if (tel.startsWith("55") && tel.length > 11) {
-        tel = tel.substring(2);
-    }
-
-    // 1. Abre a aba lateral contendo a folha de orçamento gerada para o vendedor salvar
+    // 1. Abre o orçamento em imagem na aba ao lado (assim você a tem aberta para salvar e anexar caso queira)
     abrirImagemNovaAba();
+
+    // 2. Monta a estrutura em formato texto detalhado para o corpo do e-mail
+    let assunto = `Proposta Comercial de Embalagens - ${nome}`;
     
-    // 2. CORREÇÃO: Cria o link concatenando o padrão fixo solicitado com os números limpos e dispara de imediato
-    setTimeout(() => {
-        const linkExatoWhatsapp = `https://api.whatsapp.com/send?phone=55{tel}`;
-        window.open(linkExatoWhatsapp, "_blank");
-    }, 450);
+    let corpoEmail = `Prezado(a) ${nome},\n\n`;
+    corpoEmail += `Agradecemos a oportunidade de apresentar nossa proposta comercial para o seu projeto de embalagens.\n`;
+    corpoEmail += `Abaixo constam as especificações técnicas gerais do seu pedido:\n\n`;
+    corpoEmail += `--------------------------------------------------------\n`;
+    corpoEmail += `ESPECIFICAÇÕES DO PEDIDO:\n`;
+    corpoEmail += `• Produto Base: ${dadosComerciais.itemSelecionado.text}\n`;
+    corpoEmail += `• Impressão / Cores: ${dadosComerciais.corSelecionada}\n`;
+    corpoEmail += `• Acabamento com Ilhós: ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}\n`;
+    corpoEmail += `• Alça / Cordão: ${dadosComerciais.cordaoSelecionado.value}\n`;
+    corpoEmail += `• Furo para Laço: ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}\n\n`;
+    corpoEmail += `RESUMO FINANCEIRO:\n`;
+    corpoEmail += `• Quantidade Solicitada: ${dadosComerciais.qtd} unidades\n`;
+    corpoEmail += `• Preço Unitário Calculado: R$ ${dadosComerciais.custoUnitario.toFixed(2)}\n`;
+    corpoEmail += `• VALOR TOTAL DA PROPOSTA: R$ ${dadosComerciais.total.toFixed(2)}\n`;
+    corpoEmail += `--------------------------------------------------------\n\n`;
+    corpoEmail += `CONDIÇÕES COMERCIAIS:\n`;
+    corpoEmail += `• Validade da Proposta: 10 dias (vencimento obrigatório em ${dataValidade.toLocaleDateString('pt-BR')}).\n`;
+    corpoEmail += `• Forma de Pagamento: 50% de entrada na aprovação e 50% em 21 dias após a entrega.\n`;
+    corpoEmail += `• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e sinal de entrada.\n`;
+    corpoEmail += `• Condições de Frete: SP Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).\n\n`;
+    corpoEmail += `Nota: Atenciosamente, ${vendedor} - Emissão em ${dataHoje.toLocaleDateString('pt-BR')}.\n`;
+
+    // Codifica os textos de forma segura para links de e-mail na web
+    const assuntoCodificado = encodeURIComponent(assunto);
+    const corpoCodificado = encodeURIComponent(corpoEmail);
+    const ccFixo = "comvil@comvil.com.br";
+
+    // Concatena o destinatário do formulário com a cópia fixa obrigatória
+    const linkMailto = `mailto:${emailCliente}?cc=${ccFixo}&subject=${assuntoCodificado}&body=${corpoCodificado}`;
+
+    // Dispara a chamada nativa de e-mail do sistema operacional
+    window.location.href = linkMailto;
 }
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {

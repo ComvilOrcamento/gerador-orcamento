@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -21,7 +25,7 @@
         .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #0097a7; }
         
-        /* VISUALIZAÇÃO PRÉVIA DO PREENCHIMENTO */
+        /* VISUALIZAÇÃO PRÉVIA */
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
@@ -54,34 +58,19 @@
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com"></div>
     </div>
 
-    <!-- ITENS -->
+    <!-- CONFIGURAÇÃO UNIFICADA DE ITENS -->
     <h2>Itens do orçamento</h2>
-    <div class="row">
-        <div class="field"><label>Produto</label><select id="produto"></select></div>
-        <div class="field"><label>Tipo - Tamanho</label><select id="tamanho"></select></div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Configuração do Produto (Item, Tamanho, Papel e Acabamentos) *</label>
+        <select id="selectProdutoConfigurado"></select>
     </div>
-    <div class="row">
-        <div class="field"><label>Papel</label><select id="papel"></select></div>
-        <div class="field"><label>Gramatura</label><select id="gramatura"><option value="180g">180g</option><option value="240g">240g</option></select></div>
-    </div>
-    <div class="row">
-        <div class="field"><label>Cores</label><select id="cores"><option value="2x0">2x0</option><option value="4x0">4x0</option></select></div>
-        <div class="field"><label>Cordão</label><select id="cordao"></select></div>
-    </div>
-
-    <!-- ACABAMENTOS -->
-    <h2>Ennobrecimento</h2>
-    <div class="row">
-        <div class="field"><label>Plastificação</label><select id="plastificacao"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-        <div class="field"><label>Laminação BOPP</label><select id="laminacao"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-    </div>
-    <div class="row">
-        <div class="field"><label>Ilhós</label><select id="ilhos"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-        <div class="field"><label>Verniz Local</label><select id="verniz"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-    </div>
-    <div class="row">
-        <div class="field"><label>Hot Stamping</label><select id="hotstamping"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-        <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Quantidade Mínima *</label>
+        <select id="qtd">
+            <option value="500">500 un</option>
+            <option value="1000">1000 un</option>
+            <option value="2000">2000 un</option>
+        </select>
     </div>
 
     <div class="field">
@@ -100,27 +89,26 @@
             </div>
             <div style="font-size:15px; font-weight:bold; color:#ba1cb3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
-            <div class="secao-preview"><div class="preview-titulo">Especificações</div><div id="text-dados-produto"></div></div>
+            <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido Unificado</div><div id="text-dados-produto"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
         </div>
-        <!-- Elemento oculto que faz a mágica acontecer -->
+        <!-- Elemento oculto para montagem vetorial do arquivo final -->
         <canvas id="canvasEspelho" style="display:none;"></canvas>
         <button class="btn-exportar" onclick="abrirImagemNovaAba()">Gerar Imagem JPEG em Nova Aba</button>
     </div>
 </div>
 
 <script>
-let database = { produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
+let database = { produtosConfigurados: [] };
 let objImgMinha = new Image();
 let objImgCliente = new Image();
 let temLogoCliente = false;
 
-// Pré-carrega a sua logo fixa da pasta do repositório
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files[0];
+    const arquivo = event.target.files;
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { 
@@ -139,23 +127,21 @@ function carregarLogoCliente(event) {
 window.onload = function() {
     fetch('dados.json')
         .then(response => response.json())
-        .then(data => { database = data; carregarMenus(); })
+        .then(data => { database = data; carregarMenusUnificados(); })
         .catch(error => console.error("Erro ao carregar banco de dados:", error));
 };
 
-function carregarMenus() {
-    const prodSel = document.getElementById("produto");
-    prodSel.innerHTML = '';
-    database.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
-    const tamSel = document.getElementById("tamanho");
-    tamSel.innerHTML = '';
-    database.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
-    const papelSel = document.getElementById("papel");
-    papelSel.innerHTML = '';
-    database.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
-    const cordaoSel = document.getElementById("cordao");
-    cordaoSel.innerHTML = '';
-    database.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
+function carregarMenusUnificados() {
+    const produtoSel = document.getElementById("selectProdutoConfigurado");
+    produtoSel.innerHTML = '';
+    
+    // Alimenta o menu dinâmico a partir do novo formato unificado do JSON
+    database.produtosConfigurados.forEach((prod) => {
+        let opt = new Option(prod.nomeCompleto, prod.id);
+        opt.dataset.detalhes = prod.detalhes;
+        opt.dataset.preco = prod.precoBase;
+        produtoSel.add(opt);
+    });
 }
 
 function gerarVisualizacaoTela() {
@@ -163,77 +149,49 @@ function gerarVisualizacaoTela() {
     const tel = document.getElementById("telCliente").value.trim();
     if(!nome || !tel) { alert("Erro: Nome do cliente e Telefone são campos obrigatórios!"); return; }
 
-    const tamSel = document.getElementById("tamanho");
-    const papelSel = document.getElementById("papel");
-    const cordaoSel = document.getElementById("cordao");
+    const prodSel = document.getElementById("selectProdutoConfigurado");
+    const itemSelecionado = prodSel.options[prodSel.selectedIndex];
     
-    let custo = parseFloat(tamSel.options[tamSel.selectedIndex].dataset.preco || 0) +
-                parseFloat(papelSel.options[papelSel.selectedIndex].dataset.preco || 0) +
-                parseFloat(cordaoSel.options[cordaoSel.selectedIndex].dataset.preco || 0);
-                
-    let acabamentos = [];
-    if(document.getElementById("plastificacao").value === "Sim") { custo += database.valoresAcabamento.plastificacao; acabamentos.push("Plastificação"); }
-    if(document.getElementById("laminacao").value === "Sim") { custo += database.valoresAcabamento.laminacao; acabamentosAtivos.push("Laminação BOPP"); }
-    if(document.getElementById("ilhos").value === "Sim") { custo += database.valoresAcabamento.ilhos; acabamentos.push("Ilhós"); }
-    if(document.getElementById("verniz").value === "Sim") { custo += database.valoresAcabamento.verniz; acabamentos.push("Verniz Local"); }
-    if(document.getElementById("hotstamping").value === "Sim") { custo += database.valoresAcabamento.hotstamping; acabamentos.push("Hot Stamping"); }
-
+    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
     const qtd = parseInt(document.getElementById("qtd").value);
-    const total = custo * qtd;
+    const total = custoUnitario * qtd;
 
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Produto:</strong> ${document.getElementById("produto").value} (${tamSel.value}) <br> <strong>Papel:</strong> ${papelSel.value} - ${document.getElementById("gramatura").value} <br> <strong>Acabamentos:</strong> ${cordaoSel.value} ${acabamentos.length > 0 ? '+ ' + acabamentos.join(', ') : ''}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${qtd} un | <strong>Unitário:</strong> R$ ${custo.toFixed(2)} <br> <strong style="color:#ba1cb3;">Total: R$ ${total.toFixed(2)}</strong>`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Configuração Selecionada:</strong><br>${itemSelecionado.dataset.detalhes}`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${qtd} un | <strong>Unitário Base:</strong> R$ ${custoUnitario.toFixed(2)} <br> <strong style="color:#ba1cb3;">Total da Proposta: R$ ${total.toFixed(2)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
 function abrirImagemNovaAba() {
-    // Captura os dados atualizados para desenhar a imagem limpa
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
     
-    const tamSel = document.getElementById("tamanho");
-    const papelSel = document.getElementById("papel");
-    const cordaoSel = document.getElementById("cordao");
+    const prodSel = document.getElementById("selectProdutoConfigurado");
+    const itemSelecionado = prodSel.options[prodSel.selectedIndex];
     
-    let custo = parseFloat(tamSel.options[tamSel.selectedIndex].dataset.preco || 0) +
-                parseFloat(papelSel.options[papelSel.selectedIndex].dataset.preco || 0) +
-                parseFloat(cordaoSel.options[cordaoSelect?.selectedIndex || cordaoSel.selectedIndex].dataset.preco || 0);
-                
-    let acabamentos = [];
-    if(document.getElementById("plastificacao").value === "Sim") { custo += database.valoresAcabamento.plastificacao; acabamentos.push("Plastificação"); }
-    if(document.getElementById("laminacao").value === "Sim") { custo += database.valoresAcabamento.laminacao; acabamentos.push("Laminação BOPP"); }
-    if(document.getElementById("ilhos").value === "Sim") { custo += database.valoresAcabamento.ilhos; acabamentos.push("Ilhós"); }
-    if(document.getElementById("verniz").value === "Sim") { custo += database.valoresAcabamento.verniz; acabamentos.push("Verniz Local"); }
-    if(document.getElementById("hotstamping").value === "Sim") { custo += database.valoresAcabamento.hotstamping; acabamentos.push("Hot Stamping"); }
-
+    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
     const qtd = parseInt(document.getElementById("qtd").value);
-    const total = custo * qtd;
+    const total = custoUnitario * qtd;
 
     const dataHoje = new Date();
     const dataValidade = new Date();
     dataValidade.setDate(dataHoje.getDate() + 10);
 
-    // CONFIGURAÇÃO DO DESENHO DO PRODUTO (CANVAS)
     const canvas = document.getElementById("canvasEspelho");
     const ctx = canvas.getContext("2d");
     
-    // Define dimensões fixas de uma folha de papel digital proporção A4 (Largura x Altura)
     canvas.width = 600;
-    canvas.height = 780;
+    canvas.height = 760;
     
-    // Fundo Branco da Folha
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Desenha Sua Logo Fixa (Esquerda)
     try { ctx.drawImage(objImgMinha, 35, 30, 130, 50); } catch(e){}
     
-    // Desenha Palavra "Cliente:" e a Logo do Cliente (Direita) se existir
     ctx.fillStyle = "#555555";
     ctx.font = "bold 12px Arial";
     ctx.textAlign = "right";
@@ -245,81 +203,94 @@ function abrirImagemNovaAba() {
         ctx.fillText("Cliente: [Sem Logo Anexa]", 565, 60);
     }
     
-    // Linha Roxa de Divisão Superior
     ctx.strokeStyle = "#ba1cb3";
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     
-    // Título do Documento
     ctx.fillStyle = "#ba1cb3";
     ctx.font = "bold 15px Arial";
     ctx.textAlign = "left";
-    ctx.fillText("PROPOSTA COMERCIAL", 35, 130);
+    ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     
-    // Bloco 1: Dados do Cliente
+    // Bloco 1: Cliente
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185);
     ctx.fillText("Telefone: " + tel + "  |  E-mail: " + (email || "Não informado"), 50, 203);
     
-    // Bloco 2: Especificações Técnicas
-    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações do Pedido");
-    ctx.fillStyle = "#333333";
-    ctx.fillText("Produto Escolhido: " + document.getElementById("produto").value + " (" + tamSel.value + ")", 50, 270);
-    ctx.fillText("Material Base: Papel " + papelSel.value + " - " + document.getElementById("gramatura").value, 50, 290);
-    ctx.fillText("Impressão / Cores: " + document.getElementById("cores").value, 50, 310);
-    ctx.fillText("Acabamentos Ativos: " + cordaoSel.value + (acabamentos.length > 0 ? " + " + acabamentos.join(", ") : ""), 50, 330);
+    // Bloco 2: Especificações Técnicas Unificadas
+    desenharCaixaPdf(ctx, 35, 235, 530, 90, "Especificações Técnicas do Pedido");
+    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial";
+    ctx.fillText("Modelo e Acabamentos unificados de fábrica:", 50, 270);
+    ctx.font = "11px Arial";
     
-    // Bloco 3: Resumo Financeiro
-    desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
-    ctx.fillStyle = "#333333";
-    ctx.fillText("Quantidade Solicitada: " + qtd + " unidades", 50, 395);
-    ctx.fillText("Preço Unitário Estimado: R$ " + custo.toFixed(2), 50, 415);
+    // Quebra a string longa de especificações em duas linhas para não estourar a margem da foto
+    let detalhesTexto = itemSelecionado.dataset.detalhes;
+    let partes = detalhesTexto.split(" | ");
+    let linha1 = partes.slice(0, 4).join(" | ");
+    let linha2 = partes.slice(4).join(" | ");
+    
+    ctx.fillText("• " + linha1, 50, 290);
+    if(linha2) ctx.fillText("• " + linha2, 50, 308);
+    
+    // Bloco 3: Fechamento Financeiro
+    desenharCaixaPdf(ctx, 35, 345, 530, 70, "Resumo Financeiro");
+    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillText("Quantidade Solicitada: " + qtd + " unidades", 50, 380);
+    ctx.fillText("Preço Unitário Fixo: R$ " + custoUnitario.toFixed(2), 50, 400);
     ctx.fillStyle = "#ba1cb3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
-    ctx.fillText("TOTAL DA PROPOSTA: R$ " + total.toFixed(2), 550, 410);
+    ctx.fillText("TOTAL DA PROPOSTA: R$ " + total.toFixed(2), 550, 395);
     
-    // Bloco 4: Condições Comerciais em Rosa Claro
+    // Bloco 4: Condições Comerciais
     ctx.fillStyle = "#fff2fd";
-    ctx.fillRect(35, 450, 530, 115);
-    ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
+    ctx.fillRect(35, 435, 530, 115);
+    ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 1; ctx.strokeRect(35, 435, 530, 115);
     ctx.fillStyle = "#ba1cb3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left";
-    ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 457);
     ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
-    ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 495);
-    ctx.fillText("• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, 515);
-    ctx.fillText("• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
-    ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 555);
+    ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 480);
+    ctx.fillText("• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, 500);
+    ctx.fillText("• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 520);
+    ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 540);
     
     // Rodapé de Emissão
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center";
-    ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 600);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 620); ctx.lineTo(565, 620); ctx.stroke();
+    ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 580);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 600); ctx.lineTo(565, 600); ctx.stroke();
 
-    // ABRE A NOVA ABA IMEDIATAMENTE
     const novaAba = window.open("", "_blank");
-    if (!novaAba) { alert("Pop-up bloqueado! Por favor, autorize pop-ups nas configurações."); return; }
+    if (!novaAba) { alert("Pop-up bloqueado pelo navegador! Ative a permissão de pop-ups."); return; }
     
-    // Extrai a imagem pura em formato binário estável
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
-    
-    // Monta o visual limpo do painel de salvamento na aba criada
     novaAba.document.write(`
-        <html lang="pt-BR">
-        <head>
-            <title>Orçamento Comercial - Imagem</title>
-            <style>
-                body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
-                img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
-            </style>
-        </head>
-        <body>
-            <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-            <img src="${dataUrl}" />
+        <html>
+        <head><title>Processando Orçamento...</title></head>
+        <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
+            <h2>⏳ Processando e combinando logos com as especificações... Aguarde.</h2>
         </body>
         </html>
     `);
-    novaAba.document.close();
+
+    setTimeout(() => {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
+        novaAba.document.open();
+        novaAba.document.write(`
+            <html lang="pt-BR">
+            <head>
+                <title>Orçamento Unificado - Imagem</title>
+                <style>
+                    body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
+                    .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                    img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
+                </style>
+            </head>
+            <body>
+                <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+                <img src="${dataUrl}" />
+            </body>
+            </html>
+        `);
+        novaAba.document.close();
+    }, 250);
 }
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {

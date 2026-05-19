@@ -30,7 +30,6 @@
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        .cliente-box { justify-content: flex-end; gap: 8px; font-size: 12px; font-weight: bold; color: #555; }
         .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; font-size: 13px; line-height: 1.5; }
         .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
     </style>
@@ -39,13 +38,6 @@
 
 <div class="container">
     <h1>Novo Orçamento</h1>
-
-    <!-- LOGO DO CLIENTE (OPCIONAL) -->
-    <h2>Arte do Cliente</h2>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Logo do Cliente (PNG ou JPG)</label>
-        <input type="file" id="uploadLogoCliente" accept="image/*" onchange="carregarLogoCliente(event)">
-    </div>
 
     <!-- DADOS DO CLIENTE -->
     <h2>Dados do cliente</h2>
@@ -88,7 +80,7 @@
     <!-- ILHÓS E CORDÃO -->
     <div class="row">
         <div class="field">
-            <label>Ilhós *</label>
+            <label>Enobrecimento: Ilhós *</label>
             <select id="selectIlhos">
                 <option value="Não">Não</option>
                 <option value="Sim">Sim</option>
@@ -121,7 +113,6 @@
         <div id="area-orcamento">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
-                <div class="logo-box cliente-box"><span>Cliente:</span><img id="img-cliente-preview" style="display:none;"></div>
             </div>
             <div style="font-size:15px; font-weight:bold; color:#ba1cb3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
@@ -136,29 +127,9 @@
 <script>
 let database = { produtosConfigurados: [], cordoes: [], valoresAcabamento: {} };
 let objImgMinha = new Image();
-let objImgCliente = new Image();
-let temLogoCliente = false;
 
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
-objImgCliente.crossOrigin = "anonymous";
-
-function carregarLogoCliente(event) {
-    const arquivo = event.target.files;
-    if (arquivo) {
-        const reader = new FileReader();
-        reader.onload = function(e) { 
-            objImgCliente.onload = function() {
-                temLogoCliente = true;
-                const preview = document.getElementById("img-cliente-preview");
-                preview.src = e.target.result;
-                preview.style.display = "block";
-            };
-            objImgCliente.src = e.target.result;
-        };
-        reader.readAsDataURL(arquivo);
-    }
-}
 
 window.onload = function() {
     fetch('dados.json')
@@ -200,15 +171,12 @@ function calcularValoresAtuais() {
     let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
     custoUnitario += parseFloat(cordaoSelecionado.dataset.preco || 0);
     
-    // Soma o custo da variação de cor
     if(database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
         custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
     }
-    // Soma o custo do furo para laço
     if(temFuroLaco) {
         custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
     }
-    // Soma o custo do ilhós
     if(temIlhos) {
         custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
     }
@@ -256,17 +224,6 @@ function abrirImagemNovaAba() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     try { ctx.drawImage(objImgMinha, 35, 30, 130, 50); } catch(e){}
-    
-    ctx.fillStyle = "#555555";
-    ctx.font = "bold 12px Arial";
-    ctx.textAlign = "right";
-    
-    if (temLogoCliente && objImgCliente.complete && objImgCliente.naturalWidth !== 0) {
-        ctx.fillText("Cliente:", 440, 60);
-        try { ctx.drawImage(objImgCliente, 450, 30, 115, 50); } catch(e){}
-    } else {
-        ctx.fillText("Cliente: [Sem Logo Anexa]", 565, 60);
-    }
     
     ctx.strokeStyle = "#ba1cb3";
     ctx.lineWidth = 2;
@@ -318,7 +275,7 @@ function abrirImagemNovaAba() {
     
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center";
     ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); stroke();
 
     const novaAba = window.open("", "_blank");
     if (!novaAba) { alert("Pop-up bloqueado pelo navegador! Ative a permissão de pop-ups."); return; }
@@ -327,7 +284,7 @@ function abrirImagemNovaAba() {
         <html>
         <head><title>Processando Orçamento...</title></head>
         <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
-            <h2>⏳ Processando e combinando logos com as especificações...</h2>
+            <h2>⏳ Processando e gerando o documento final...</h2>
         </body>
         </html>
     `);

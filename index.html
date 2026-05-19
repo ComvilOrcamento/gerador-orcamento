@@ -28,9 +28,6 @@
         .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
         
-        .btn-email { flex: 1; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; display: block; }
-        .btn-email:hover { background: #002244; }
-        
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
@@ -123,7 +120,6 @@
         
         <div class="botoes-container">
             <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
-            <button class="btn-email" id="btnDisparoEmail" onclick="enviarOrcamentoEmailAutomatico()">Enviar Orçamento</button>
         </div>
     </div>
 </div>
@@ -264,60 +260,6 @@ function abrirImagemNovaAba() {
         novaAba.document.write(`<html><body style="margin:0;background:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="${dataUrl}" style="max-width:95%;max-height:85vh;box-shadow:0 5px 25px rgba(0,0,0,0.5);background:white;" /></body></html>`);
         novaAba.document.close();
     }
-}
-
-function enviarOrcamentoEmailAutomatico() {
-    const nome = document.getElementById("nomeCliente").value.trim();
-    const emailCliente = document.getElementById("emailCliente").value.trim();
-    const tel = document.getElementById("telCliente").value.trim();
-    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
-    
-    const dadosComerciais = calcularValoresAtuais();
-    const dataValidade = new Date();
-    dataValidade.setDate(new Date().getDate() + 10);
-
-    const btn = document.getElementById("btnDisparoEmail");
-    btn.innerText = "⏳ Enviando...";
-    btn.disabled = true;
-
-    const dadosFormulario = {
-        "Cliente_Nome": nome,
-        "Cliente_Email": emailCliente,
-        "Cliente_Telefone": tel,
-        "Vendedor": vendedor,
-        "Produto_Base": dadosComerciais.itemSelecionado.text,
-        "Cores_Impressao": dadosComerciais.corSelecionada,
-        "Ilhos": dadosComerciais.temIlhos ? "Sim" : "Não",
-        "Cordao_Alca": dadosComerciais.cordaoSelecionado.value,
-        "Furo_Laço": dadosComerciais.temFuroLaco ? "Sim" : "Não",
-        "Quantidade": dadosComerciais.qtd,
-        "Preco_Unitario": "R$ " + dadosComerciais.custoUnitario.toFixed(2),
-        "VALOR_TOTAL": "R$ " + dadosComerciais.total.toFixed(2),
-        "Validade_Proposta": dataValidade.toLocaleDateString('pt-BR'),
-        "_replyto": emailCliente,
-        "_subject": `Orçamento de Embalagens Aprovado - ${nome}`
-    };
-
-    fetch("https://formspree.io", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(dadosFormulario)
-    })
-    .then(response => {
-        if (response.ok) {
-            btn.innerText = "✓ Enviado com Sucesso!";
-            btn.style.background = "#155724";
-            alert("Sucesso! O orçamento foi processado e o e-mail foi enviado automaticamente para o cliente e para a Comvil.");
-        } else {
-            throw new Error("Falha no servidor");
-        }
-    })
-    .catch(error => {
-        btn.innerText = "Erro ao enviar";
-        btn.style.background = "#721c24";
-        btn.disabled = false;
-        alert("Erro no envio automático. Certifique-se de ter configurado o link do Formspree corretamente.");
-    });
 }
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {

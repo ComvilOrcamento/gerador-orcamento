@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
     
-    <!-- BIBLIOTECA MODERNA PARA CONVERTER HTML EM IMAGEM JPG IMEDIATAMENTE -->
+    <!-- BIBLIOTECA PARA CONVERTER HTML EM IMAGEM JPG -->
     <script src="https://cloudflare.com"></script>
     
     <style>
@@ -26,11 +26,11 @@
         .btn-exportar:hover { background: #0097a7; }
         
         /* ESTILO DA FOLHA DO ORÇAMENTO */
-        #area-orcamento { background: #ffffff; padding: 30px; margin-top: 15px; display: none; color: #333; width: 100%; max-width: 540px; }
+        #area-orcamento { background: #ffffff; padding: 30px; margin-top: 15px; display: block; color: #333; width: 100%; max-width: 540px; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        .cliente-box { justify-content: flex-end; gap: 8px; font-size: 12px; font-weight: bold; color: #555; }
+        .cliente-box { display: flex; justify-content: flex-end; gap: 8px; font-size: 12px; font-weight: bold; color: #555; }
         .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #ba1cb3; }
         .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
@@ -122,7 +122,7 @@ let bancoDados = { clientes: [], produtos: [], tamanhos: [], papeis: [], cordoes
 let logoClienteBase64 = "";
 
 function carregarLogoCliente(event) {
-    const arquivo = event.target.files;
+    const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
         reader.onload = function(e) { logoClienteBase64 = e.target.result; };
@@ -131,6 +131,7 @@ function carregarLogoCliente(event) {
 }
 
 window.onload = function() {
+    // Carrega dados simulados caso o arquivo JSON falhe localmente
     fetch('dados.json')
         .then(response => response.json())
         .then(data => {
@@ -139,151 +140,128 @@ window.onload = function() {
             bancoDados.clientes = [...bancoDados.clientes, ...clientesLocais];
             carregarMenus();
         })
-        .catch(error => console.error("Erro ao carregar banco de dados:", error));
+        .catch(error => {
+            console.warn("Criando base de dados temporária para testes locais.");
+            bancoDados = {
+                clientes: [{nome: "Empresa Exemplo LTDA", email: "cliente@teste.com", tel: "(11) 99999-9999"}],
+                produtos: ["Tags Comercial", "Cartões de Visita"],
+                tamanhos: ["5x5 cm", "9x5 cm"],
+                papeis: ["Couché", "Offset"],
+                cordoes: ["Nylon", "Algodão"]
+            };
+            carregarMenus();
+        });
 };
 
 function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
     clienteSel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
     bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
+    
     const prodSel = document.getElementById("produto");
     prodSel.innerHTML = '';
-    bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
+    bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p, p));
+
     const tamSel = document.getElementById("tamanho");
     tamSel.innerHTML = '';
-    bancoDados.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
-    const papelSel = document.getElementById("papel");
-    papelSel.innerHTML = '';
-    bancoDados.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
-    const cordaoSel = document.getElementById("cordao");
-    cordaoSel.innerHTML = '';
-    bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
+    bancoDados.tamanhos.forEach(t => tamSel.options[tamSel.options.length] = new Option(t, t));
+
+    const papSel = document.getElementById("papel");
+    papSel.innerHTML = '';
+    bancoDados.papeis.forEach(pa => papSel.options[papSel.options.length] = new Option(pa, pa));
+
+    const cordSel = document.getElementById("cordao");
+    cordSel.innerHTML = '';
+    bancoDados.cordoes.forEach(co => cordSel.options[cordSel.options.length] = new Option(co, co));
 }
 
 function selecionarCliente() {
     const idx = document.getElementById("selectCliente").value;
     if(idx !== "") {
-        const cliente = bancoDados.clientes[idx];
-        document.getElementById("nomeCliente").value = cliente.nome;
-        document.getElementById("emailCliente").value = cliente.email;
-        document.getElementById("telCliente").value = cliente.telephone || cliente.telefone || '';
-    }
-}
-
-function salvarClienteAutomatico(nome, email, telefone) {
-    if (!nome) return;
-    const jaExiste = bancoDados.clientes.some(c => c.nome.toLowerCase() === nome.toLowerCase());
-    if (!jaExiste) {
-        const novoCliente = { nome, email, telephone: telephone };
-        let historicoLocal = JSON.parse(localStorage.getItem('clientesSalvosAutomático')) || [];
-        historicoLocal.push(novoCliente);
-        localStorage.setItem('clientesSalvosAutomático', JSON.stringify(historicoLocal));
-        bancoDados.clientes.push(novoCliente);
-        carregarMenus();
+        const c = bancoDados.clientes[idx];
+        document.getElementById("nomeCliente").value = c.nome;
+        document.getElementById("emailCliente").value = c.email || '';
+        document.getElementById("telCliente").value = c.tel || '';
     }
 }
 
 function gerarPropostaCompleta() {
     const nome = document.getElementById("nomeCliente").value;
+    if(!nome) { alert("Por favor, preencha o nome do cliente."); return; }
+
     const email = document.getElementById("emailCliente").value;
     const tel = document.getElementById("telCliente").value;
-    
-    if(!nome) { alert("Por favor, digite o nome do cliente."); return; }
-    salvarClienteAutomatico(nome, email, tel);
-    
-    const tamSelect = document.getElementById("tamanho");
-    const papelSelect = document.getElementById("papel");
-    const cordaoSelect = document.getElementById("cordao");
-    
-    let custoUnitario = 0;
-    custoUnitario += parseFloat(tamSelect.options[tamSelect.selectedIndex].dataset.preco || 0);
-    custoUnitario += parseFloat(papelSelect.options[papelSelect.selectedIndex].dataset.preco || 0);
-    custoUnitario += parseFloat(cordaoSelect.options[cordaoSelect.selectedIndex].dataset.preco || 0);
-    
-    const tabelaAcabamentos = bancoDados.valoresAcabamento;
-    let acabamentosAtivos = [];
-    if(document.getElementById("plastificacao").value === "Sim") { custoUnitario += tabelaAcabamentos.plastificacao; acabamentosAtivos.push("Plastificação"); }
-    if(document.getElementById("laminacao").value === "Sim") { custoUnitario += tabelaAcabamentos.laminacao; acabamentosAtivos.push("Laminação BOPP"); }
-    if(document.getElementById("ilhos").value === "Sim") { custoUnitario += tabelaAcabamentos.ilhos; acabamentosAtivos.push("Ilhós"); }
-    if(document.getElementById("verniz").value === "Sim") { custoUnitario += tabelaAcabamentos.verniz; acabamentosAtivos.push("Verniz Local"); }
-    if(document.getElementById("hotstamping").value === "Sim") { custoUnitario += tabelaAcabamentos.hotstamping; acabamentosAtivos.push("Hot Stamping"); }
+    const prod = document.getElementById("produto").value;
+    const tam = document.getElementById("tamanho").value;
+    const papel = document.getElementById("papel").value;
+    const grama = document.getElementById("gramatura").value;
+    const cores = document.getElementById("cores").value;
+    const cordao = document.getElementById("cordao").value;
+    const qtd = document.getElementById("qtd").value;
+    const vendedor = document.getElementById("nomeVendedor").value || "Comercial";
 
-    const qtd = parseInt(document.getElementById("qtd").value);
-    const valorTotal = custoUnitario * qtd;
-
-    const dataHoje = new Date();
-    const dataValidade = new Date();
-    dataValidade.setDate(dataHoje.getDate() + 10);
-
-    let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    let imgClienteTag = logoClienteBase64 ? `<span>Cliente:</span><img src="${logoClienteBase64}">` : '<span>Cliente: [Sem Logo Anexa]</span>';
-
+    // Criação dinâmica da folha de orçamento
     let htmlOrcamento = `
         <div class="logos-header">
-            <div class="logo-box">${imgMinhaTag}</div>
-            <div class="logo-box cliente-box">${imgClienteTag}</div>
+            <div class="logo-box">
+                ${logoClienteBase64 ? `<img src="${logoClienteBase64}" alt="Logo Cliente">` : `<h3>${nome}</h3>`}
+            </div>
+            <div class="cliente-box">
+                <div>Orçamento Comercial</div>
+            </div>
         </div>
-        
-        <div style="font-size: 15px; font-weight: bold; color: #ba1cb3; margin-bottom: 15px; text-transform: uppercase;">Proposta Comercial</div>
-        
         <div class="secao-pdf">
             <div class="secao-titulo">Dados do Cliente</div>
-            <div class="recibo-linha"><strong>Nome / Razão Social:</strong> ${nome}</div>
-            <div class="recibo-linha"><strong>Telefone:</strong> ${tel || 'Não informado'} | <strong>E-mail:</strong> ${email || 'Não informado'}</div>
+            <div class="recibo-linha"><strong>Nome:</strong> ${nome}</div>
+            ${email ? `<div class="recibo-linha"><strong>E-mail:</strong> ${email}</div>` : ''}
+            ${tel ? `<div class="recibo-linha"><strong>Telefone:</strong> ${tel}</div>` : ''}
         </div>
-
         <div class="secao-pdf">
             <div class="secao-titulo">Especificações do Pedido</div>
             <table class="tabela-itens">
-                <thead><tr><th>Item</th><th>Papel</th><th>Cores</th><th>Acabamentos</th></tr></thead>
-                <tbody><tr>
-                    <td>${document.getElementById("produto").value} (${tamSelect.value})</td>
-                    <td>${papelSelect.value} - ${document.getElementById("gramatura").value}</td>
-                    <td>${document.getElementById("cores").value}</td>
-                    <td>${cordaoSelect.value} ${acabamentosAtivos.length > 0 ? '+ ' + acabamentosAtivos.join(", ") : ""}</td>
-                </tr></tbody>
+                <thead>
+                    <tr><th>Item</th><th>Configuração</th><th>Qtd</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>${prod}</td>
+                        <td>${tam} - ${papel} ${grama} - Cores: ${cores} - Cordão: ${cordao}</td>
+                        <td>${qtd} un</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
-
-        <div class="secao-pdf">
-            <div class="secao-titulo">Resumo Financeiro</div>
-            <div class="recibo-linha"><strong>Quantidade:</strong> ${qtd} unidades | <strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
-            <div class="recibo-total">TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}</div>
-        </div>
-        
-        <div class="secao-pdf" style="background:#fff2fd; border-left:3px solid #ba1cb3; padding:10px;">
-            <div class="recibo-linha" style="color:#ba1cb3; font-weight:bold; font-size:11px;">⚠️ CONDIÇÕES COMERCIAIS</div>
-            <div class="recibo-linha" style="font-size:11px;">• <strong>Validade da Proposta:</strong> Válido por 10 dias (expira obrigatoriamente em: <strong>${dataValidade.toLocaleDateString('pt-BR')}</strong>).</div>
-            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Forma de Pagamento:</strong> 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.</div>
-            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Prazo de Produção:</strong> 20 dias úteis a partir da aprovação final do layout digital e pagamento da entrada.</div>
-        </div>
-        
-        <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
-            Emitido por: ${document.getElementById("nomeVendedor").value || 'Comercial'} em ${dataHoje.toLocaleDateString('pt-BR')}
-        </div>
+        <div class="recibo-total">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div>
+        <div style="font-size: 11px; margin-top: 15px; color: #777;">Atendido por: ${vendedor}</div>
     `;
 
     document.getElementById("area-orcamento").innerHTML = htmlOrcamento;
-    document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
+    
+    // Rola a página suavemente até o preview do orçamento
+    document.getElementById("bloco-resultado").scrollIntoView({ behavior: 'smooth' });
 }
 
 function exportarJpgDireto() {
     const alvo = document.getElementById("area-orcamento");
-    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
     
-    // Transforma o HTML diretamente em uma imagem digital JPG limpa
-    htmlToImage.toJpeg(alvo, { quality: 0.95, bgcolor: '#ffffff' })
-        .then(function (dataUrl) {
-            const link = document.createElement('a');
-            link.download = `Orcamento_${nomeCliente}.jpg`;
-            link.href = dataUrl;
-            link.click();
-        })
-        .catch(function (error) {
-            alert('Houve um problema ao salvar a imagem automaticamente. Tente novamente.');
-            console.error('Erro de conversão:', error);
-        });
+    // html2canvas renderiza a div selecionada e converte em imagem base64
+    html2canvas(alvo, {
+        scale: 2, // Melhora a resolução e nitidez do texto no JPG final
+        useCORS: true // Evita travamento com imagens vindas de fora
+    }).then(canvas => {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.95); // Converte para formato JPG
+        
+        // Dispara o download automático do navegador
+        const link = document.createElement("a");
+        const nomeCliente = document.getElementById("nomeCliente").value.replace(/\s+/g, '_');
+        link.download = `Orcamento_${nomeCliente}.jpg`;
+        link.href = dataUrl;
+        link.click();
+    }).catch(err => {
+        console.error("Falha ao gerar o arquivo JPG:", err);
+        alert("Erro técnico ao exportar o JPG.");
+    });
 }
 </script>
 </body>

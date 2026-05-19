@@ -65,7 +65,27 @@
         <select id="selectProdutoConfigurado"></select>
     </div>
     
-    <!-- NOVOS SELETORES: ILHÓS E CORDÃO -->
+    <!-- VARIAÇÃO DE CORES E FURO PARA LAÇO -->
+    <div class="row">
+        <div class="field">
+            <label>Impressão / Cores *</label>
+            <select id="selectCores">
+                <option value="1x0">1x0</option>
+                <option value="2x0">2x0</option>
+                <option value="4x0">4x0</option>
+                <option value="4x1">4x1</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Furo para Laço *</label>
+            <select id="selectFuroLaco">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- ILHÓS E CORDÃO -->
     <div class="row">
         <div class="field">
             <label>Enobrecimento: Ilhós *</label>
@@ -121,6 +141,7 @@ let temLogoCliente = false;
 
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
+objImgCliente.crossOrigin = "anonymous";
 
 function carregarLogoCliente(event) {
     const arquivo = event.target.files;
@@ -172,13 +193,22 @@ function calcularValoresAtuais() {
     const cordaoSel = document.getElementById("selectCordao");
     const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
     
-    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
+    const corSelecionada = document.getElementById("selectCores").value;
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
+    const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     
-    // Soma o preço do cordão escolhido
+    let custoUnitario = parseFloat(itemSelecionado.dataset.preco || 0);
     custoUnitario += parseFloat(cordaoSelecionado.dataset.preco || 0);
     
-    // Soma o preço do ilhós caso seja "Sim"
-    const temIlhos = document.getElementById("selectIlhos").value === "Sim";
+    // Soma o custo da variação de cor
+    if(database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+        custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
+    }
+    // Soma o custo do furo para laço
+    if(temFuroLaco) {
+        custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
+    }
+    // Soma o custo do ilhós
     if(temIlhos) {
         custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
     }
@@ -186,7 +216,7 @@ function calcularValoresAtuais() {
     const qtd = parseInt(document.getElementById("qtd").value);
     const total = custoUnitario * qtd;
     
-    return { custoUnitario, qtd, total, itemSelecionado, cordaoSelecionado, temIlhos };
+    return { custoUnitario, qtd, total, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
 }
 
 function gerarVisualizacaoTela() {
@@ -197,7 +227,7 @@ function gerarVisualizacaoTela() {
     const dadosComerciais = calcularValoresAtuais();
 
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Alça/Cordão:</strong> ${dadosComerciais.cordaoSelecionado.value}<br><strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.itemSelecionado.dataset.detalhes}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada}<br><strong>Alça:</strong> ${dadosComerciais.cordaoSelecionado.value} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário Final:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong style="color:#ba1cb3;">Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
@@ -231,7 +261,7 @@ function abrirImagemNovaAba() {
     ctx.font = "bold 12px Arial";
     ctx.textAlign = "right";
     
-    if (temLogoCliente) {
+    if (temLogoCliente && objImgCliente.complete && objImgCliente.naturalWidth !== 0) {
         ctx.fillText("Cliente:", 440, 60);
         try { ctx.drawImage(objImgCliente, 450, 30, 115, 50); } catch(e){}
     } else {
@@ -247,13 +277,11 @@ function abrirImagemNovaAba() {
     ctx.textAlign = "left";
     ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     
-    // Bloco 1: Cliente
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185);
     ctx.fillText("Telefone: " + tel + "  |  E-mail: " + (email || "Não informado"), 50, 203);
     
-    // Bloco 2: Especificações Técnicas
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial";
     ctx.fillText("Modelo base de fábrica:", 50, 270);
@@ -265,13 +293,11 @@ function abrirImagemNovaAba() {
     let linha2 = partes.slice(4).join(" | ");
     
     ctx.fillText("• " + linha1, 50, 290);
-    if(linha2) ctx.fillText("• " + linha2, 50, 306);
+    if(partes.length > 4) ctx.fillText("• " + linha2, 50, 306);
     
-    // Insere as linhas dinâmicas de cordão e ilhós na foto
-    ctx.font = "bold 11px Arial"; ctx.fillText("Adicionais de montagem:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• Alça / Cordão: " + dadosComerciais.cordaoSelecionado.value + "  |  • Acabamento com Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não"), 50, 338);
+    ctx.font = "bold 11px Arial"; ctx.fillText("Adicionais de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Alça: " + dadosComerciais.cordaoSelecionado.value + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     
-    // Bloco 3: Resumo Financeiro
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395);
@@ -279,7 +305,6 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#ba1cb3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
     ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
     
-    // Bloco 4: Condições Comerciais
     ctx.fillStyle = "#fff2fd";
     ctx.fillRect(35, 450, 530, 115);
     ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
@@ -291,7 +316,6 @@ function abrirImagemNovaAba() {
     ctx.fillText("• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
     ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 555);
     
-    // Rodapé de Emissão
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center";
     ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
@@ -303,7 +327,7 @@ function abrirImagemNovaAba() {
         <html>
         <head><title>Processando Orçamento...</title></head>
         <body style="background:#333;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;">
-            <h2>⏳ Processando e combinando logos com as especificações... Aguarde.</h2>
+            <h2>⏳ Processando e combinando logos com as especificações...</h2>
         </body>
         </html>
     `);
@@ -320,20 +344,20 @@ function abrirImagemNovaAba() {
                     .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
                     img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
                 </style>
-                </head>
-                <body>
-                    <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-                    <img src="${dataUrl}" />
-                </body>
-                </html>
-            `);
-            novaAba.document.close();
+            </head>
+            <body>
+                <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+                <img src="${dataUrl}" />
+            </body>
+            </html>
+        `);
+        novaAba.document.close();
     }, 250);
 }
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; strokeRect = ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
     ctx.strokeStyle = "#ba1cb3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();

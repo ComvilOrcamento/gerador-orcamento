@@ -95,9 +95,10 @@
         <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
     </div>
 
+    <!-- CORREÇÃO: Removido asterisco e obrigatoriedade do vendedor -->
     <div class="field">
-        <label>Nome do vendedor *</label>
-        <input type="text" id="nomeVendedor" placeholder="Seu nome (Obrigatório)" required>
+        <label>Nome do vendedor</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
     </div>
 
     <button class="btn-principal" onclick="gerarPropostaCompleta()">Gerar Orçamento</button>
@@ -114,9 +115,6 @@
 <script>
 let bancoDados = { produtos: [], tamanhos: [], papeis: [], cordoes: [], valoresAcabamento: {} };
 let logoClienteBase64 = "";
-
-// Limpa de vez qualquer rastro de clientes antigos salvos na máquina local
-localStorage.removeItem('clientesSalvosAutomático');
 
 function carregarLogoCliente(event) {
     const arquivo = event.target.files;
@@ -162,8 +160,9 @@ function gerarPropostaCompleta() {
     const tel = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim();
     
-    if(!nome || !tel || !vendedor) { 
-        alert("Erro: Nome do cliente, Telefone e Nome do vendedor são campos obrigatórios!"); 
+    // CORREÇÃO: O vendedor não é mais avaliado na validação obrigatória
+    if(!nome || !tel) { 
+        alert("Erro: Nome do cliente e Telefone são campos obrigatórios!"); 
         return; 
     }
     
@@ -228,14 +227,15 @@ function gerarPropostaCompleta() {
         </div>
         
         <div class="secao-pdf" style="background:#fff2fd; border-left:3px solid #ba1cb3; padding:10px;">
-            <div class="recibo-linha" style="color:#ba1cb3; font-weight:bold; font-size:11px;">⚠️ CONDIÇÕES COMERCIAIS</div>
+            <div class="secao-titulo" style="color:#ba1cb3;">⚠️ CONDIÇÕES COMERCIAIS</div>
             <div class="recibo-linha" style="font-size:11px;">• <strong>Validade da Proposta:</strong> Válido por 10 dias (expira obrigatoriamente em: <strong>${dataValidade.toLocaleDateString('pt-BR')}</strong>).</div>
-            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Forma de Pagamento:</strong> 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.</div>
-            <div class="recibo-linha" style="font-size:11px; margin-top:4px;">• <strong>Prazo de Produção:</strong> 20 dias úteis a partir da aprovação final do layout digital e pagamento da entrada.</div>
+            <div class="recibo-linha" style="font-size:11px;">• <strong>Forma de Pagamento:</strong> 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.</div>
+            <div class="recibo-linha" style="font-size:11px;">• <strong>Prazo de Produção:</strong> 20 dias úteis a partir da aprovação final do layout digital e pagamento da entrada.</div>
+            <div class="recibo-linha" style="font-size:11px;">• <strong>Condições de Frete:</strong> São Paulo Capital (Frete <strong>CIF</strong> - por nossa conta) | Grande São Paulo e Demais Estados (Frete <strong>FOB</strong> - por conta do destinatário).</div>
         </div>
         
         <div class="recibo-linha" style="margin-top: 20px; font-size: 10px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;">
-            Emitido por: ${vendedor} em ${dataHoje.toLocaleDateString('pt-BR')}
+            Emitido por: ${vendedor || 'Equipe Comercial'} em ${dataHoje.toLocaleDateString('pt-BR')}
         </div>
     `;
 
@@ -248,7 +248,7 @@ function abrirImagemNovaAba() {
     const alvo = document.getElementById("area-orcamento");
     const novaAba = window.open("", "_blank");
     if (!novaAba) {
-        alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações do navegador.");
+        alert("O navegador bloqueou a nova aba. Por favor, ative os pop-ups nas configurações.");
         return;
     }
     
@@ -261,32 +261,35 @@ function abrirImagemNovaAba() {
         </html>
     `);
 
-    htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff' })
-        .then(function (dataUrl) {
-            novaAba.document.open();
-            novaAba.document.write(`
-                <html lang="pt-BR">
-                <head>
-                    <title>Orçamento Comercial - Imagem</title>
-                    <style>
-                        body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
-                        .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
-                        img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
-                    </style>
-                </head>
-                <body>
-                    <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
-                    <img src="${dataUrl}" />
-                </body>
-                </html>
-            `);
-            novaAba.document.close();
-        })
-        .catch(function (error) {
-            novaAba.close();
-            alert('Houve um erro técnico de leitura do arquivo de imagem. Verifique os arquivos anexos.');
-            console.error(error);
-        });
+    // CORREÇÃO: Delay de segurança de 250 milissegundos para forçar o navegador a carregar o cache da imagem da logo do cliente antes de gerar o JPEG
+    setTimeout(() => {
+        htmlToImage.toJpeg(alvo, { quality: 0.98, bgcolor: '#ffffff' })
+            .then(function (dataUrl) {
+                novaAba.document.open();
+                novaAba.document.write(`
+                    <html lang="pt-BR">
+                    <head>
+                        <title>Orçamento Comercial - Imagem</title>
+                        <style>
+                            body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #fff; }
+                            .aviso { background: #ba1cb3; padding: 12px 25px; border-radius: 30px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 14px; text-align: center; }
+                            img { max-width: 95%; max-height: 85vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; background: white; object-fit: contain; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="aviso">📸 Toque e segure (ou clique com botão direito) na imagem para SALVAR / ENVIAR</div>
+                        <img src="${dataUrl}" />
+                    </body>
+                    </html>
+                `);
+                novaAba.document.close();
+            })
+            .catch(function (error) {
+                novaAba.close();
+                alert('Erro ao gerar o orçamento visual. Tente gerar novamente.');
+                console.error(error);
+            });
+    }, 250);
 }
 </script>
 </body>

@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Profissional</title>
-    
-    <!-- Bibliotecas para Geração de PDF Perfeita -->
-    <script src="https://cloudflare.com"></script>
-    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -22,63 +18,47 @@
         
         .btn-principal { width: 100%; background: #ba1cb3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #9e1497; }
-        .btn-exportar { background: #00bcd4; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; float: right; margin-top: 10px; font-weight: bold; }
+        .btn-exportar { background: #00bcd4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; float: right; margin-top: 15px; font-weight: bold; width: 100%; }
         .btn-exportar:hover { background: #0097a7; }
         
-        /* ESTILO DA FOLHA DO ORÇAMENTO (FORMATADA PARA PDF A4) */
-        #area-orcamento { 
-            background: #ffffff; 
-            padding: 40px; 
-            margin-top: 15px; 
-            display: none;
-            color: #333;
-        }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; }
+        /* ESTILO DA PROPOSTA VISUAL NA TELA */
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 30px; margin-top: 15px; display: none; color: #333; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ba1cb3; padding-bottom: 15px; }
         .logo-box { flex: 1; }
-        .logo-box img { max-height: 65px; max-width: 180px; object-fit: contain; }
-        .recibo-titulo { font-size: 18px; font-weight: bold; color: #ba1cb3; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px; }
+        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; }
+        .recibo-titulo { font-size: 16px; font-weight: bold; color: #ba1cb3; text-transform: uppercase; margin-bottom: 15px; }
+        .secao-pdf { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; }
+        .secao-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
+        .recibo-linha { font-size: 12px; margin-bottom: 4px; line-height: 1.4; color: #444; }
         
-        /* SEÇÕES DO PDF */
-        .secao-pdf { margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 6px; border-left: 4px solid #ba1cb3; }
-        .secao-titulo { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 8px; }
-        .recibo-linha { font-size: 13px; margin-bottom: 6px; line-height: 1.5; color: #444; }
-        
-        /* TABELA DE PREÇOS NO PDF */
-        .tabela-itens { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
-        .tabela-itens th { background: #ba1cb3; color: white; font-size: 12px; padding: 8px; text-align: left; font-weight: bold; }
-        .tabela-itens td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .recibo-total { font-size: 18px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 15px; padding-top: 10px; }
+        /* TABELA */
+        .tabela-itens { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .tabela-itens th { background: #ba1cb3; color: white; font-size: 11px; padding: 6px; text-align: left; }
+        .tabela-itens td { padding: 8px 6px; border-bottom: 1px solid #eee; font-size: 12px; }
+        .recibo-total { font-size: 16px; font-weight: bold; color: #ba1cb3; text-align: right; margin-top: 10px; }
 
-        /* VISUALIZAÇÃO DA SACOLA 3D ILUSTRATIVA */
-        .preview-sacola-container { display: flex; justify-content: center; margin: 15px 0; padding: 10px; background: #fff; }
-        .sacola-virtual { 
-            background: #e8e8e8; 
-            border: 1px solid #b5b5b5; 
-            box-shadow: -8px 8px 15px rgba(0,0,0,0.15), inset 15px 0 20px rgba(0,0,0,0.05);
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            transform: perspective(500px) rotateY(-12deg);
-            transform-style: preserve-3d;
-            border-radius: 2px;
-            transition: all 0.3s ease;
+        /* MOCKUP FOTOREALISTA DA IA COM ESTAMPA COMPOSITA */
+        .mockup-ia-box { display: flex; justify-content: center; margin: 15px 0; }
+        .sacola-ia-container { 
+            width: 240px; height: 180px; 
+            background-image: url('mockup-sacola.jpg'); /* Sua imagem realista gerada por IA */
+            background-size: cover; background-position: center;
+            position: relative; border-radius: 4px; border: 1px solid #eee;
         }
-        /* Lateral 3d dobrada */
-        .sacola-virtual::before {
-            content: ''; position: absolute; top: 0; right: -10px; width: 10px; height: 100%;
-            background: #d8d8d8; transform: skewY(12deg); transform-origin: left;
-            border: 1px solid #b5b5b5; border-left: none;
+        .logo-cliente-sobreposta { 
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -30%) skewY(-2deg); /* Inclinação leve para casar com a perspectiva 3D da IA */
+            max-width: 35%; max-height: 35%; 
+            object-fit: contain; opacity: 0.85; mix-blend-mode: multiply; 
         }
-        .alca-virtual {
-            width: 35px; height: 25px;
-            border: 3px solid #666; border-bottom: none;
-            border-radius: 30px 30px 0 0;
-            position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+
+        /* CONFIGURAÇÃO EXCLUSIVA DE IMPRESSÃO (RESOLVE FAIXA DE SEGURANÇA DO DOWNLOAD) */
+        @media print {
+            body { background: white; padding: 0; }
+            .container, h1, h2, .row, .field, input, select, .btn-principal, .btn-exportar { display: none !important; }
+            #bloco-resultado, #area-orcamento { display: block !important; border: none !important; padding: 0 !important; width: 100% !important; }
         }
-        .logo-sacola-virtual { max-width: 55%; max-height: 45%; object-fit: contain; filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.15)); }
-        .dimensao-label { position: absolute; bottom: 6px; font-size: 9px; color: #777; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -89,7 +69,7 @@
     <!-- LOGO DO CLIENTE (OPCIONAL) -->
     <h2>Arte do Cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
-        <label>Logo do Cliente (Opcional - Para a estampa da sacola)</label>
+        <label>Logo do Cliente (Opcional - Estampa)</label>
         <input type="file" id="uploadLogoCliente" accept="image/*" onchange="carregarLogoCliente(event)">
     </div>
 
@@ -98,61 +78,31 @@
     <div class="field" style="margin-bottom: 12px;">
         <label>Buscar Cliente Cadastrado</label>
         <select id="selectCliente" onchange="selecionarCliente()">
-            <option value="">-- Selecione um cliente ou digite abaixo --</option>
+            <option value="">-- Selecione um cliente --</option>
         </select>
     </div>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
-        <input type="text" id="nomeCliente" placeholder="Nome completo do cliente" required>
+        <input type="text" id="nomeCliente" placeholder="Nome do cliente" required>
     </div>
     <div class="row">
-        <div class="field">
-            <label>E-mail</label>
-            <input type="email" id="emailCliente" placeholder="email@exemplo.com">
-        </div>
-        <div class="field">
-            <label>Telefone</label>
-            <input type="text" id="telCliente" placeholder="(00) 00000-0000">
-        </div>
+        <div class="field"><label>E-mail</label><input type="email" id="emailCliente"></div>
+        <div class="field"><label>Telefone</label><input type="text" id="telCliente"></div>
     </div>
 
     <!-- ITENS -->
     <h2>Itens do orçamento</h2>
     <div class="row">
-        <div class="field">
-            <label>Produto</label>
-            <select id="produto"></select>
-        </div>
-        <div class="field">
-            <label>Tipo - Tamanho</label>
-            <select id="tamanho"></select>
-        </div>
+        <div class="field"><label>Produto</label><select id="produto"></select></div>
+        <div class="field"><label>Tipo - Tamanho</label><select id="tamanho"></select></div>
     </div>
     <div class="row">
-        <div class="field">
-            <label>Papel</label>
-            <select id="papel"></select>
-        </div>
-        <div class="field">
-            <label>Gramatura</label>
-            <select id="gramatura">
-                <option value="180g">180g</option>
-                <option value="240g">240g</option>
-            </select>
-        </div>
+        <div class="field"><label>Papel</label><select id="papel"></select></div>
+        <div class="field"><label>Gramatura</label><select id="gramatura"><option value="180g">180g</option><option value="240g">240g</option></select></div>
     </div>
     <div class="row">
-        <div class="field">
-            <label>Cores</label>
-            <select id="cores">
-                <option value="2x0">2x0</option>
-                <option value="4x0">4x0</option>
-            </select>
-        </div>
-        <div class="field">
-            <label>Cordão</label>
-            <select id="cordao"></select>
-        </div>
+        <div class="field"><label>Cores</label><select id="cores"><option value="2x0">2x0</option><option value="4x0">4x0</option></select></div>
+        <div class="field"><label>Cordão</label><select id="cordao"></select></div>
     </div>
 
     <!-- ACABAMENTOS -->
@@ -167,14 +117,9 @@
     </div>
     <div class="row">
         <div class="field"><label>Hot Stamping</label><select id="hotstamping"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-        <div class="field"><label>Gofragem</label><select id="gofragem"><option value="Não">Não</option><option value="Casca de ovo">Casca de ovo</option></select></div>
-    </div>
-    <div class="row">
-        <div class="field"><label>Furo Laço</label><select id="furo"><option value="Não">Não</option><option value="2x0">2x0</option></select></div>
-        <div class="field"><label>Quantidade Mínima</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
+        <div class="field"><label>Quantidade</label><select id="qtd"><option value="500">500 un</option><option value="1000">1000 un</option></select></div>
     </div>
 
-    <h2>Vendedor</h2>
     <div class="field">
         <label>Nome do vendedor</label>
         <input type="text" id="nomeVendedor" placeholder="Seu nome">
@@ -182,13 +127,12 @@
 
     <button class="btn-principal" onclick="calcularOrcamento()">Gerar Orçamento</button>
 
-    <!-- SAÍDA EM PDF -->
+    <!-- SAÍDA SEGURA -->
     <div id="bloco-resultado" style="display: none;">
-        <h2>Visualização da Proposta</h2>
         <div id="area-orcamento">
-            <!-- Renderizado via JS -->
+            <!-- Renderizado dinamicamente -->
         </div>
-        <button class="btn-exportar" onclick="exportarPdf()">Baixar Orçamento em PDF</button>
+        <button class="btn-exportar" onclick="exportarProposta()">Salvar / Imprimir Proposta Comercial</button>
     </div>
 </div>
 
@@ -200,9 +144,7 @@ function carregarLogoCliente(event) {
     const arquivo = event.target.files[0];
     if (arquivo) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            logoClienteBase64 = e.target.result;
-        };
+        reader.onload = function(e) { logoClienteBase64 = e.target.result; };
         reader.readAsDataURL(arquivo);
     }
 }
@@ -210,38 +152,21 @@ function carregarLogoCliente(event) {
 window.onload = function() {
     fetch('dados.json')
         .then(response => response.json())
-        .then(data => {
-            bancoDados = data;
-            carregarMenus();
-        })
+        .then(data => { bancoDados = data; carregarMenus(); })
         .catch(error => console.error("Erro ao carregar banco de dados:", error));
 };
 
 function carregarMenus() {
     const clienteSel = document.getElementById("selectCliente");
-    bancoDados.clientes.forEach((c, index) => {
-        clienteSel.options[clienteSel.options.length] = new Option(c.nome, index);
-    });
+    bancoDados.clientes.forEach((c, index) => { clienteSel.options[clienteSel.options.length] = new Option(c.nome, index); });
     const prodSel = document.getElementById("produto");
     bancoDados.produtos.forEach(p => prodSel.options[prodSel.options.length] = new Option(p.nome, p.nome));
     const tamSel = document.getElementById("tamanho");
-    bancoDados.tamanhos.forEach(t => {
-        let opt = new Option(t.nome, t.nome);
-        opt.dataset.preco = t.preco;
-        tamSel.add(opt);
-    });
+    bancoDados.tamanhos.forEach(t => { let opt = new Option(t.nome, t.nome); opt.dataset.preco = t.preco; tamSel.add(opt); });
     const papelSel = document.getElementById("papel");
-    bancoDados.papeis.forEach(p => {
-        let opt = new Option(p.nome, p.nome);
-        opt.dataset.preco = p.preco;
-        papelSel.add(opt);
-    });
+    bancoDados.papeis.forEach(p => { let opt = new Option(p.nome, p.nome); opt.dataset.preco = p.preco; papelSel.add(opt); });
     const cordaoSel = document.getElementById("cordao");
-    bancoDados.cordoes.forEach(c => {
-        let opt = new Option(c.nome, c.nome);
-        opt.dataset.preco = c.preco;
-        cordaoSel.add(opt);
-    });
+    bancoDados.cordoes.forEach(c => { let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cordaoSel.add(opt); });
 }
 
 function selecionarCliente() {
@@ -271,79 +196,51 @@ function calcularOrcamento() {
     if(document.getElementById("ilhos").value === "Sim") { custoUnitario += tabelaAcabamentos.ilhos; acabamentosAtivos.push("Ilhós"); }
     if(document.getElementById("verniz").value === "Sim") { custoUnitario += tabelaAcabamentos.verniz; acabamentosAtivos.push("Verniz Local"); }
     if(document.getElementById("hotstamping").value === "Sim") { custoUnitario += tabelaAcabamentos.hotstamping; acabamentosAtivos.push("Hot Stamping"); }
-    if(document.getElementById("gofragem").value !== "Não") { custoUnitario += tabelaAcabamentos.gofragem; acabamentosAtivos.push("Gofragem"); }
 
     const qtd = parseInt(document.getElementById("qtd").value);
     const valorTotal = custoUnitario * qtd;
 
-    // Regra de proporção para a Sacola Ilustrativa 3D Realista
-    let w = 110, h = 140;
-    if(tamSelect.value === "25x35x10") { w = 135; h = 175; }
-    if(tamSelect.value === "30x40x12") { w = 160; h = 195; }
-
-    // Sua logo fixa puxa direto do repositório
     let imgMinhaTag = `<img src="logo-empresa.png" onerror="this.src='https://placehold.co'">`;
-    
-    // Logo do cliente só aparece se ele fizer o upload (opcional)
-    let imgClienteTag = logoClienteBase64 ? `<img src="${logoClienteBase64}">` : '<span style="font-size:11px;color:#aaa">Arte Sem Estampa</span>';
-    let imgSacolaTag = logoClienteBase64 ? `<img class="logo-sacola-virtual" src="${logoClienteBase64}">` : '<span style="font-size:10px;color:#999;font-weight:bold;letter-spacing:1px;text-transform:uppercase">Sua Marca</span>';
+    let imgSacolaTag = logoClienteBase64 ? `<img class="logo-cliente-sobreposta" src="${logoClienteBase64}">` : '';
 
     let htmlOrcamento = `
         <div class="logos-header">
             <div class="logo-box">${imgMinhaTag}</div>
-            <div class="logo-box" style="text-align:right;">${imgClienteTag}</div>
+            <div class="logo-box" style="text-align:right; font-size:12px; color:#ba1cb3; font-weight:bold;">PROPOSTA COMERCIAL</div>
         </div>
-        
-        <div class="recibo-titulo">Orçamento Comercial</div>
         
         <div class="secao-pdf">
             <div class="secao-titulo">Dados do Cliente</div>
-            <div class="recibo-linha"><strong>Nome/Razão Social:</strong> ${document.getElementById("nomeCliente").value || 'Não informado'}</div>
-            <div class="recibo-linha"><strong>Telefone:</strong> ${document.getElementById("telCliente").value || 'Não informado'} | <strong>E-mail:</strong> ${document.getElementById("emailCliente").value || 'Não informado'}</div>
+            <div class="recibo-linha"><strong>Nome:</strong> ${document.getElementById("nomeCliente").value}</div>
+            <div class="recibo-linha"><strong>Contato:</strong> ${document.getElementById("telCliente").value} | ${document.getElementById("emailCliente").value}</div>
         </div>
 
         <div class="secao-pdf">
-            <div class="secao-titulo">Visualização Conceitual do Produto (Perspectiva 3D)</div>
-            <div class="preview-sacola-container">
-                <div class="sacola-virtual" style="width: ${w}px; height: ${h}px;">
-                    <div class="alca-virtual"></div>
+            <div class="secao-titulo">Apresentação Conceitual Realística (Mockup IA)</div>
+            <div class="mockup-ia-box">
+                <div class="sacola-ia-container">
                     ${imgSacolaTag}
-                    <div class="dimensao-label">${tamSelect.value}</div>
                 </div>
             </div>
         </div>
 
         <div class="secao-pdf">
-            <div class="secao-titulo">Especificações Técnicas</div>
+            <div class="secao-titulo">Especificações do Produto</div>
             <table class="tabela-itens">
-                <thead>
-                    <tr>
-                        <th>Produto / Tamanho</th>
-                        <th>Papel / Gramatura</th>
-                        <th>Cores</th>
-                        <th>Cordão e Acabamentos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>${document.getElementById("produto").value} (${tamSelect.value})</td>
-                        <td>${papelSelect.value} - ${document.getElementById("gramatura").value}</td>
-                        <td>${document.getElementById("cores").value}</td>
-                        <td>${cordaoSelect.value}${acabamentosAtivos.length > 0 ? ' + ' + acabamentosAtivos.join(", ") : " (Sem Adicionais)"}</td>
-                    </tr>
-                </tbody>
+                <thead><tr><th>Item</th><th>Papel</th><th>Cores</th><th>Acabamentos</th></tr></thead>
+                <tbody><tr>
+                    <td>${document.getElementById("produto").value} (${tamSelect.value})</td>
+                    <td>${papelSelect.value} - ${document.getElementById("gramatura").value}</td>
+                    <td>${document.getElementById("cores").value}</td>
+                    <td>${cordaoSelect.value} ${acabamentosAtivos.length > 0 ? '+ ' + acabamentosAtivos.join(", ") : ""}</td>
+                </tr></tbody>
             </table>
         </div>
 
         <div class="secao-pdf">
-            <div class="secao-titulo">Valores e Condições</div>
-            <div class="recibo-linha"><strong>Quantidade Solicitada:</strong> ${qtd} unidades</div>
-            <div class="recibo-linha"><strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
-            <div class="recibo-total">VALOR TOTAL DA PROPOSTA: R$ ${valorTotal.toFixed(2)}</div>
-        </div>
-
-        <div class="recibo-linha" style="margin-top: 30px; font-size: 11px; color: #777; text-align: center; border-top: 1px dashed #ccc; padding-top: 15px;">
-            Proposta gerada por: ${document.getElementById("nomeVendedor").value || 'Departamento Comercial'} em ${new Date().toLocaleDateString('pt-BR')}
+            <div class="secao-titulo">Fechamento Financeiro</div>
+            <div class="recibo-linha"><strong>Quantidade:</strong> ${qtd} unidades | <strong>Valor Unitário:</strong> R$ ${custoUnitario.toFixed(2)}</div>
+            <div class="recibo-total">TOTAL: R$ ${valorTotal.toFixed(2)}</div>
         </div>
     `;
 
@@ -352,21 +249,9 @@ function calcularOrcamento() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function exportarPdf() {
-    const elemento = document.getElementById("area-orcamento");
-    const nomeCliente = document.getElementById("nomeCliente").value || 'Cliente';
-    
-    // Configurações de página A4 perfeitas para impressão
-    const opcoes = {
-        margin:       10,
-        filename:     `Orcamento_${nomeCliente}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    // Executa a exportação nativa em PDF
-    html2pdf().set(opcoes).from(elemento).save();
+function exportarProposta() {
+    // Abre a janela de sistema nativa. O usuário escolhe "Salvar como PDF" ou enviar direto para a impressora.
+    window.print();
 }
 </script>
 </body>

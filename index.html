@@ -131,10 +131,28 @@ let objImgMinha = new Image();
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
+// NOVA MÁSCARA CORRIGIDA: Trata dinamicamente fixos e celulares sem quebrar a digitação
 function mascaraTelefone(input) {
-    let v = input.value.replace(/\D/g, "");
-    v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-    v = v.replace(/(\d)(\d{4})$/g, "$1-$2");
+    let v = input.value.replace(/\D/g, ""); // Remove tudo que não for número
+    
+    if (v.length > 11) {
+        v = v.substring(0, 11); // Limita ao máximo de caracteres válidos
+    }
+
+    if (v.length > 10) {
+        // Formato Celular: (XX) XXXXX-XXXX
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    } else if (v.length > 6) {
+        // Formato Parcial/Fixo: (XX) XXXX-XXXX
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
+    } else if (v.length > 2) {
+        // Formato Parcial inicial: (XX) XXXX
+        v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+    } else if (v.length > 0) {
+        // Apenas o DDD: (XX
+        v = v.replace(/^(\d{0,2})$/, "($1");
+    }
+    
     input.value = v;
 }
 
@@ -217,10 +235,7 @@ function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
-    
-    // Define "Equipe Comercial Comvil" como valor padrão caso o campo esteja vazio
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
-    
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
     const dataValidade = new Date();

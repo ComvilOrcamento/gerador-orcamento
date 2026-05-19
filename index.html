@@ -217,7 +217,10 @@ function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
-    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial';
+    
+    // Define "Equipe Comercial Comvil" como valor padrão caso o campo esteja vazio
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
+    
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
     const dataValidade = new Date();
@@ -269,7 +272,9 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = tel.replace(/\D/g, "");
-        const linkWhatsApp = `https://api.whatsapp.com/send?phone=55{telefoneLimpo}`;
+        
+        const textoInjetado = encodeURIComponent(`Olá, segue o orçamento. Atenciosamente, ${vendedor}`);
+        const linkWhatsApp = `https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}`;
 
         novaAba.document.write(`
             <html>

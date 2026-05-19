@@ -131,28 +131,19 @@ let objImgMinha = new Image();
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
-// NOVA MÁSCARA CORRIGIDA: Trata dinamicamente fixos e celulares sem quebrar a digitação
 function mascaraTelefone(input) {
-    let v = input.value.replace(/\D/g, ""); // Remove tudo que não for número
-    
-    if (v.length > 11) {
-        v = v.substring(0, 11); // Limita ao máximo de caracteres válidos
-    }
+    let v = input.value.replace(/\D/g, "");
+    if (v.length > 11) v = v.substring(0, 11);
 
     if (v.length > 10) {
-        // Formato Celular: (XX) XXXXX-XXXX
         v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
     } else if (v.length > 6) {
-        // Formato Parcial/Fixo: (XX) XXXX-XXXX
         v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
     } else if (v.length > 2) {
-        // Formato Parcial inicial: (XX) XXXX
         v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
     } else if (v.length > 0) {
-        // Apenas o DDD: (XX
         v = v.replace(/^(\d{0,2})$/, "($1");
     }
-    
     input.value = v;
 }
 
@@ -234,7 +225,7 @@ function gerarVisualizacaoTela() {
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const email = document.getElementById("emailCliente").value.trim();
-    const tel = document.getElementById("telCliente").value.trim();
+    const telFormulario = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
@@ -257,7 +248,7 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + tel + "  |  E-mail: " + email, 50, 203);
+    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario + "  |  E-mail: " + email, 50, 203);
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
@@ -286,8 +277,9 @@ function abrirImagemNovaAba() {
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
-        const telefoneLimpo = tel.replace(/\D/g, "");
         
+        // CORREÇÃO: Limpa diretamente o valor em tempo real coletado do input de texto
+        const telefoneLimpo = telFormulario.replace(/\D/g, "");
         const textoInjetado = encodeURIComponent(`Olá, segue o orçamento. Atenciosamente, ${vendedor}`);
         const linkWhatsApp = `https://api.whatsapp.com/send?phone=55{telefoneLimpo}&text=${textoInjetado}`;
 

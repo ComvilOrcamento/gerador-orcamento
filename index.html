@@ -21,6 +21,9 @@
         
         input:focus, select:focus { border-color: #0056b3; }
         
+        /* Estilo para campos travados/apenas leitura */
+        input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
+        
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
@@ -48,7 +51,7 @@
     </div>
     <div class="row">
         <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
-        <div class="field"><label>E-mail *</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Obrigatório)" required></div>
+        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
     </div>
 
     <h2>Itens do orçamento</h2>
@@ -99,20 +102,20 @@
         </select>
     </div>
 
-    <div class="row">
-        <div class="field">
-            <label>Nome do vendedor</label>
-            <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
-        </div>
-        <div class="field">
-            <label>Número do orçamento</label>
-            <input type="text" id="numOrcamento" placeholder="Ex: 0024 (Opcional)">
-        </div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Nome do vendedor</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
     </div>
 
     <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
 
     <div id="bloco-resultado" style="display: none;">
+        <!-- CAMPO NUMÉRICO CONFIGURADO COMO APENAS LEITURA (READONLY) -->
+        <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
+            <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
+            <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
+        </div>
+
         <div id="area-orcamento">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
@@ -215,7 +218,6 @@ function obterNumeroIdentificador() {
     const campoNum = document.getElementById("numOrcamento").value.trim();
     if(campoNum) return campoNum;
     
-    // Fallback: Gera um número baseado no timestamp para não ficar em branco
     const d = new Date();
     return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
 }
@@ -223,15 +225,19 @@ function obterNumeroIdentificador() {
 function gerarVisualizacaoTela() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
-    const email = document.getElementById("emailCliente").value.trim();
-    if(!nome || !tel || !email) { alert("Erro: Nome, Telefone e E-mail do cliente são obrigatórios!"); return; }
+    if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
     const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
-    const numeroFinal = obterNumeroIdentificador();
 
-    document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
+    // Sempre gera a numeração automática estável se o campo estiver vazio
+    const inputNumero = document.getElementById("numOrcamento");
+    if (!inputNumero.value.trim()) {
+        inputNumero.value = obterNumeroIdentificador();
+    }
+    
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong>Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
@@ -242,7 +248,6 @@ function gerarVisualizacaoTela() {
 
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
-    const email = document.getElementById("emailCliente").value.trim();
     const telFormulario = document.getElementById("telCliente").value.trim();
     const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
     const dadosComerciais = calcularValoresAtuais();
@@ -264,21 +269,19 @@ function abrirImagemNovaAba() {
         ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
     } catch(e){}
 
-    // ADICIONA O NUMERADOR COMERCIAL NO CANTO SUPERIOR DIREITO DO CANVAS
     const numeroFinal = obterNumeroIdentificador();
     ctx.fillStyle = "#333333";
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "right";
     ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60);
 
-    // Reseta o alinhamento para o restante dos desenhos de texto
     ctx.textAlign = "left";
 
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario + "  |  E-mail: " + email, 50, 203);
+    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
@@ -340,7 +343,7 @@ function abrirImagemNovaAba() {
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; strokeRect = ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();

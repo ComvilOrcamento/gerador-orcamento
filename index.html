@@ -3,96 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Comercial Integrado - Comvil</title>
+    <title>Sistema Comercial Comvil</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        /* SISTEMA DE ABAS PRINCIPAIS */
+        /* ESTRUTURA DE ABAS SUPERIORES */
         .abas-navegacao { display: flex; gap: 10px; width: 100%; max-width: 800px; margin-bottom: 15px; }
-        .aba-mestra { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #e2e8f0; cursor: pointer; font-weight: bold; color: #475569; text-align: center; font-size: 14px; }
-        .aba-mestra.active { background: #003366; color: white; border-color: #003366; }
+        .aba-link { flex: 1; padding: 12px; border: 1px solid #cbd5e1; background: #e2e8f0; border-radius: 8px 8px 0 0; text-align: center; font-weight: bold; color: #475569; cursor: pointer; transition: background 0.2s; }
+        .aba-link.active { background: #003366; color: white; border-color: #003366; }
         
-        /* CONTAINERS DAS REGRAS */
-        .conteudo-aba { display: none; width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .conteudo-aba.active { display: block; }
-        .conteudo-aba.larga { max-width: 800px; } /* Painel administrativo ganha mais espaço horizontal */
-
+        .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: none; }
+        .container.active { display: block; }
+        
         /* ESTILOS COMUNS */
         h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
         h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .row { display: flex; gap: 15px; margin-bottom: 12px; }
+        .row { display: flex; gap: 15px; margin-bottom: 12px; width: 100%; }
         .field { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; margin-bottom: 4px; color: #555; font-weight: bold; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
         input:focus, select:focus { border-color: #0056b3; }
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
-        /* BOTÕES PRINCIPAIS */
+        /* BOTÕES */
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
-        .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
-
-        /* TELA DE LOGIN */
-        .login-box { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 40px auto; background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; }
-
-        /* TABELAS DO PAINEL ADMIN */
+        
+        /* PREVIEW INTERNA INDEX */
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
+        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
+        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
+        .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
+        
+        /* ESTILOS EXCLUSIVOS ADMIN */
+        .tabs-admin { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn-admin { padding: 8px 15px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; cursor: pointer; font-size: 12px; font-weight: bold; color: #64748b; }
+        .tab-btn-admin.active { background: #0f172a; color: white; }
+        .panel-admin { display: none; margin-bottom: 15px; }
+        .panel-admin.active { display: block; }
+        .form-row-admin { display: flex; gap: 15px; margin-bottom: 12px; align-items: flex-end; width: 100%; }
+        .w-nome { width: 68%; } .w-preco { width: 17%; } .w-acao { width: 15%; }
+        .btn-add { background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; height: 38px; display: flex; align-items: center; justify-content: center; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; table-layout: fixed; }
         .data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; vertical-align: middle; overflow: hidden; }
-        .data-table th { background: #f8fafc; color: #334155; height: 38px; }
+        .data-table th { background: #f8fafc; color: #334155; }
         .table-input { width: 100%; padding: 6px; border: 1px solid transparent; background: transparent; font-size: 14px; }
         .table-input:focus { border-color: #2563eb; background: #fff; outline: none; border-radius: 4px; }
         .actions-cell { display: flex; align-items: center; gap: 6px; width: 100%; }
         .order-arrows-column { display: flex; flex-direction: column; gap: 2px; }
         .btn-control { border: 1px solid #cbd5e1; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-size: 8px; font-weight: bold; background: #fff; text-align: center; line-height: 1; }
-        .btn-control:hover { background: #f1f5f9; }
         .btn-del { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; height: 26px; display: flex; align-items: center; justify-content: center; flex: 1; }
-        .btn-del:hover { background: #dc2626; }
-
-        /* REGRAS EXCLUSIVAS DE LARGURA DO ADMIN */
-        .w-nome { width: 68%; }
-        .w-preco { width: 17%; }
-        .w-acao { width: 15%; }
         .action-zone { border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 25px; display: flex; gap: 15px; }
         .btn-save-admin { flex: 1; background: #003366; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
         .btn-export-admin { flex: 1; background: #10b981; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-
-        /* PREVIEW INTERNA DO ORÇAMENTO */
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
-        .logo-box { flex: 1; display: flex; align-items: center; }
-        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
-        .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
-
-        /* ABAS INTERNAS DO ADMIN */
-        .tabs-internas { display: flex; gap: 8px; margin-bottom: 15px; }
-        .sub-tab { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; background: #f8fafc; cursor: pointer; font-weight: bold; color: #64748b; }
-        .sub-tab.active { background: #0f172a; color: white; border-color: #0f172a; }
-        .sub-conteudo { display: none; }
-        .sub-conteudo.active { display: block; }
-
-        /* TOAST DE NOTIFICAÇÃO SILENCIOSA */
-        .toast-notificacao { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #10b981; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: bold; box-shadow: 0 10px 15px rgba(0,0,0,0.1); transition: top 0.3s ease; z-index: 9999; border: 1px solid #10b981; }
+        
+        /* JANELA POP-UP POPUP LOGIN MODAL */
+        .modal-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 10000; display: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content h3 { font-size: 18px; margin-bottom: 15px; color: #0f172a; text-align: center; }
+        .modal-content .field { margin-bottom: 15px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-login-confirm { flex: 1; background: #0f172a; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-login-cancel { flex: 1; background: #cbd5e1; color: #334155; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        /* TOAST DE SALVAMENTO */
+        .toast-notificacao { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #10b981; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: bold; transition: top 0.3s ease; z-index: 99999; display: flex; align-items: center; gap: 8px; border: 1px solid #10b981; }
         .toast-notificacao.show { top: 20px; }
     </style>
 </head>
 <body>
 
-<div id="toast" class="toast-notificacao">✓ Configurações salvas!</div>
+<div id="toast" class="toast-notificacao">✓ Configurações salvas com sucesso!</div>
 
-<!-- SELETOR DE ABAS MESTRAS -->
-<div class="abas-navegacao">
-    <div id="aba-botao-orcamento" class="aba-mestra active" onclick="trocarAbaMestra('orcamento')">Orçamento de Sacolas</div>
-    <div id="aba-botao-admin" class="aba-mestra" onclick="trocarAbaMestra('admin')">Gerenciador de Dados</div>
+<!-- CONTROLE POP-UP LOGIN MODAL -->
+<div id="modalLogin" class="modal-login">
+    <div class="modal-content">
+        <h3>Acesso Restrito Admin</h3>
+        <div class="field">
+            <label>Usuário</label>
+            <input type="text" id="loginUser" placeholder="Usuário">
+        </div>
+        <div class="field">
+            <label>Senha</label>
+            <input type="password" id="loginPass" placeholder="Senha">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-login-cancel" onclick="fecharModalLogin()">Cancelar</button>
+            <button class="btn-login-confirm" onclick="validarCredenciaisAdmin()">Entrar</button>
+        </div>
+    </div>
 </div>
 
-<!-- ======================================================== -->
-<!-- ABA 1: GERADOR DE ORÇAMENTOS (SACOLAS) -->
-<!-- ======================================================== -->
-<div id="aba-conteudo-orcamento" class="conteudo-aba active">
+<!-- ABAS DE NAVEGAÇÃO SUPERIOR -->
+<div class="abas-navegacao">
+    <div id="abaOrcamento" class="aba-link active" onclick="mudarAbaPrincipal('orcamento')">Orçamento de Sacolas</div>
+    <div id="abaAdmin" class="aba-link" onclick="solicitarAcessoAdmin()">Gerenciador de Dados</div>
+</div>
+
+<!-- ============================================== -->
+<!-- ABA 1: GERADOR DE ORÇAMENTOS COMERCIAL -->
+<!-- ============================================== -->
+<div id="containerOrcamento" class="container active">
     <h1>Novo Orçamento</h1>
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
@@ -100,7 +119,7 @@
         <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
     </div>
     <div class="row">
-        <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" maxlength="15" required></div>
+        <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
     </div>
 
@@ -172,96 +191,84 @@
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
         </div>
         <canvas id="canvasEspelho" style="display:none;"></canvas>
-        <div class="botoes-container">
-            <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
-        </div>
+        <div class="botoes-container"><button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button></div>
     </div>
 </div>
 
-<!-- ======================================================== -->
-<!-- ABA 2: GERENCIADOR DE DADOS (ADMINISTRATIVO) -->
-<!-- ======================================================== -->
-<div id="aba-conteudo-admin" class="conteudo-aba larga">
-    <!-- TELA DE LOGIN RESTRITA -->
-    <div id="login-restrito" class="login-box">
-        <h3 style="font-size: 15px; color:#333; text-align:center;">Acesso Restrito - Comvil</h3>
-        <div class="field"><label>Usuário</label><input type="text" id="loginUser"></div>
-        <div class="field"><label>Senha</label><input type="password" id="loginPass"></div>
-        <button class="btn-principal" style="margin: 5px 0 0 0;" onclick="verificarCredenciaisAdmin()">Entrar no Painel</button>
+<!-- ============================================== -->
+<!-- ABA 2: GERENCIADOR DE DADOS ADMINISTRATIVO -->
+<!-- ============================================== -->
+<div id="containerAdmin" class="container">
+    <h1>Gerenciador de Catálogo de Preços</h1>
+    
+    <div class="tabs-admin">
+        <button id="btnAdminProd" class="tab-btn-admin active" onclick="switchTabAdmin('tab-produtos')">Produtos / Sacolas</button>
+        <button id="btnAdminCord" class="tab-btn-admin" onclick="switchTabAdmin('tab-cordoes')">Cordões / Alças</button>
+        <button id="btnAdminQtd" class="tab-btn-admin" onclick="switchTabAdmin('tab-quantidades')">Quantidades Mínimas</button>
+        <button id="btnAdminAcab" class="tab-btn-admin" onclick="switchTabAdmin('tab-acabamentos')">Custos de Acabamento</button>
     </div>
 
-    <!-- AREA DO PAINEL APÓS VALIDAÇÃO -->
-    <div id="painel-validado" style="display: none;">
-        <h1>Gerenciador de Catálogo de Preços</h1>
-        <div class="tabs-internas">
-            <button class="sub-tab active" onclick="switchSubTab(event, 'sub-produtos')">Produtos / Sacolas</button>
-            <button class="sub-tab" onclick="switchSubTab(event, 'sub-cordoes')">Cordões / Alças</button>
-            <button class="sub-tab" onclick="switchSubTab(event, 'sub-quantidades')">Quantidades Mínimas</button>
-            <button class="sub-tab" onclick="switchSubTab(event, 'sub-acabamentos')">Custos Fixos</button>
+    <!-- ADMIN: PRODUTOS -->
+    <div id="tab-produtos" class="panel-admin active">
+        <div class="form-row-admin">
+            <div class="input-group w-nome"><label>Nome Comercial Exibido no Menu</label><input type="text" id="prodNome" placeholder="Ex: Sacola Duplex 240g - 25x35x10"></div>
+            <div class="input-group w-preco"><label>Preço Base (R$)</label><input type="number" id="prodPreco" step="0.01" placeholder="4.00"></div>
+            <div class="input-group w-acao"><button class="btn-add" onclick="adicionarProdutoAdmin()">Adicionar</button></div>
         </div>
+        <table class="data-table" id="tableProdutos">
+            <thead><tr><th class="w-nome">Nome Comercial</th><th class="w-preco">Preço Base (R$)</th><th class="w-acao">Ações</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-        <!-- SUBABA: PRODUTOS -->
-        <div id="sub-produtos" class="sub-conteudo active">
-            <div class="form-row">
-                <div class="input-group w-nome"><label>Nome Comercial</label><input type="text" id="prodNome" placeholder="Ex: Sacola Duplex 240g - 25x35x10"></div>
-                <div class="input-group w-preco"><label>Preço Base (R\$)</label><input type="number" id="prodPreco" step="0.01" placeholder="4.00"></div>
-                <div class="input-group w-acao"><button class="btn-add" onclick="adicionarProduto()">Adicionar</button></div>
-            </div>
-            <table class="data-table" id="tableProdutos">
-                <thead><tr><th class="w-nome">Nome Comercial</th><th class="w-preco">Preço Base (R\$)</th><th class="w-acao">Ações</th></tr></thead>
-                <tbody></tbody>
-            </table>
+    <!-- ADMIN: CORDÕES -->
+    <div id="tab-cordoes" class="panel-admin">
+        <div class="form-row-admin">
+            <div class="input-group w-nome"><label>Tipo de Alça / Cordão</label><input type="text" id="cordaoNome" placeholder="Ex: Nylon, Gorgurão"></div>
+            <div class="input-group w-preco"><label>Preço (R$)</label><input type="number" id="cordaoPreco" step="0.01" placeholder="0.30"></div>
+            <div class="input-group w-acao"><button class="btn-add" onclick="adicionarCordaoAdmin()">Adicionar</button></div>
         </div>
+        <table class="data-table" id="tableCordoes">
+            <thead><tr><th class="w-nome">Tipo de Alça</th><th class="w-preco">Preço Unitário (R$)</th><th class="w-acao">Ações</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-        <!-- SUBABA: CORDÕES -->
-        <div id="sub-cordoes" class="sub-conteudo">
-            <div class="form-row">
-                <div class="input-group w-nome"><label>Tipo de Alça / Cordão</label><input type="text" id="cordaoNome" placeholder="Ex: Nylon, Gorgurão"></div>
-                <div class="input-group w-preco"><label>Preço (R\$)</label><input type="number" id="cordaoPreco" step="0.01" placeholder="0.30"></div>
-                <div class="input-group w-acao"><button class="btn-add" onclick="adicionarCordao()">Adicionar</button></div>
-            </div>
-            <table class="data-table" id="tableCordoes">
-                <thead><tr><th class="w-nome">Tipo de Alça</th><th class="w-preco">Preço Unitário (R\$)</th><th class="w-acao">Ações</th></tr></thead>
-                <tbody></tbody>
-            </table>
+    <!-- ADMIN: QUANTIDADES -->
+    <div id="tab-quantidades" class="panel-admin">
+        <div class="form-row-admin">
+            <div class="input-group" style="width: 85%;"><label>Nova Quantidade de Opção</label><input type="number" id="qtdValor" placeholder="Ex: 500"></div>
+            <div class="input-group" style="width: 15%;"><button class="btn-add" onclick="adicionarQuantidadeAdmin()">Adicionar</button></div>
         </div>
+        <table class="data-table" id="tableQuantidades">
+            <thead><tr><th style="width: 85%;">Quantidade Comercial</th><th style="width: 15%;">Ações</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-        <!-- SUBABA: QUANTIDADES -->
-        <div id="sub-quantidades" class="sub-conteudo">
-            <div class="form-row">
-                <div class="input-group" style="width: 85%;"><label>Nova Quantidade Opção</label><input type="number" id="qtdValor" placeholder="Ex: 500"></div>
-                <div class="input-group" style="width: 15%;"><button class="btn-add" onclick="adicionarQuantidade()">Adicionar</button></div>
-            </div>
-            <table class="data-table" id="tableQuantidades">
-                <thead><tr><th style="width: 85%;">Quantidade Comercial</th><th style="width: 15%;">Ações</th></tr></thead>
-                <tbody></tbody>
-            </table>
+    <!-- ADMIN: ACABAMENTOS -->
+    <div id="tab-acabamentos" class="panel-admin">
+        <div class="row">
+            <div class="field"><label>Custo Adicional Ilhós (R$)</label><input type="number" id="fixoIlhos" step="0.01"></div>
+            <div class="field"><label>Custo Adicional Furo Laço (R$)</label><input type="number" id="fixoFuro" step="0.01"></div>
         </div>
+        <h3 style="font-size: 14px; margin: 15px 0 10px 0; color: #475569;">Custo Adicional de Cores (Setup Fixo)</h3>
+        <div class="form-row-admin">
+            <div class="field"><label>Custo Cores 1x0 (R$)</label><input type="number" id="cor1x0" step="0.01"></div>
+            <div class="field"><label>Custo Cores 2x0 (R$)</label><input type="number" id="cor2x0" step="0.01"></div>
+            <div class="field"><label>Custo Cores 4x0 (R$)</label><input type="number" id="cor4x0" step="0.01"></div>
+            <div class="field"><label>Custo Cores 4x1 (R$)</label><input type="number" id="cor4x1" step="0.01"></div>
+        </div>
+    </div>
 
-        <!-- SUBABA: CONFIGURAÇÕES DE SETUP -->
-        <div id="sub-acabamentos" class="sub-conteudo">
-            <div class="form-row">
-                <div class="input-group" style="flex: 1;"><label>Custo Adicional Ilhós (R\$)</label><input type="number" id="fixoIlhos" step="0.01"></div>
-                <div class="input-group" style="flex: 1;"><label>Custo Adicional Furo Laço (R\$)</label><input type="number" id="fixoFuro" step="0.01"></div>
-            </div>
-            <h3 style="font-size: 13px; margin: 15px 0 10px 0; color: #475569; font-weight: bold;">Setup Fixo de Impressão Cores</h3>
-            <div class="form-row">
-                <div class="input-group"><label>Cores 1x0</label><input type="number" id="cor1x0" step="0.01"></div>
-                <div class="input-group"><label>Cores 2x0</label><input type="number" id="cor2x0" step="0.01"></div>
-                <div class="input-group"><label>Cores 4x0</label><input type="number" id="cor4x0" step="0.01"></div>
-                <div class="input-group"><label>Cores 4x1</label><input type="number" id="cor4x1" step="0.01"></div>
-            </div>
-        </div>
-
-        <div class="action-zone">
-            <button class="btn-save-admin" onclick="salvarAlteracoesLocais()">Salvar Alterações</button>
-            <button class="btn-export-admin" onclick="exportarJsonAtualizado()">Exportar dados.json</button>
-        </div>
+    <div class="action-zone">
+        <button class="btn-save-admin" onclick="salvarAlteracoesLocaisAdmin()">Salvar Alterações</button>
+        <button class="btn-export-admin" onclick="exportarJsonAtualizadoAdmin()">Exportar dados.json</button>
     </div>
 </div>
 
 <script>
-// OBJETO DE BANCO ATIVO CENTRALIZADO
+// OBJETO CENTRAL DE HISTÓRICO COM FALLBACK INTEGRADO
 let database = {
     "produtosConfigurados": [
         { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "precoBase": 4.00 },
@@ -269,7 +276,7 @@ let database = {
     ],
     "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
     "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
-    "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 150.0, "4x0": 300.0, "4x1": 350.0 } }
+    "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 150.0, "4x0": 250.0, "4x1": 300.0 } }
 };
 
 let objImgMinha = new Image();
@@ -277,187 +284,134 @@ objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
 window.onload = function() {
-    // Sincroniza cache local compartilhado se houver gravações anteriores
-    const cacheAtivo = localStorage.getItem('comvil_catalogo_cache');
-    if (cacheAtivo) {
-        database = JSON.parse(cacheAtivo);
-        if(!database.quantidades) database.quantidades = [500, 1000, 2000, 3000, 4000, 5000];
-        carregarMenusUnificados();
-        renderAllAdminTables();
+    const cacheLocal = localStorage.getItem('comvil_catalogo_cache');
+    if (cacheLocal) {
+        database = JSON.parse(cacheLocal);
+        if(!database.quantidades) database.quantidades = [500, 1000, 2000];
+        carregarMenusGerador();
+        renderAllAdmin();
     } else {
         fetch('dados.json')
             .then(res => res.json())
             .then(data => { 
                 database = data; 
-                if(!database.quantidades) database.quantidades = [500, 1000, 2000, 3000, 4000, 5000];
-                carregarMenusUnificados(); 
-                renderAllAdminTables();
+                if(!database.quantidades) database.quantidades = [500, 1000, 2000];
+                carregarMenusGerador();
+                renderAllAdmin();
             })
-            .catch(() => { carregarMenusUnificados(); renderAllAdminTables(); });
+            .catch(() => { carregarMenusGerador(); renderAllAdmin(); });
     }
 };
 
-/* NAVEGAÇÃO DE ABAS MESTRAS */
-function trocarAbaMestra(destino) {
-    document.querySelectorAll('.aba-mestra').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('active'));
+/* =================================================== */
+/* NAVEGAÇÃO E RESTRICÃO MODAL POP-UP */
+/* =================================================== */
+function mudarAbaPrincipal(destino) {
+    document.querySelectorAll('.aba-link').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
     
-    if (destino === 'orcamento') {
-        document.getElementById('aba-botao-orcamento').classList.add('active');
-        document.getElementById('aba-conteudo-orcamento').classList.add('active');
-        carregarMenusUnificados(); // Recarrega os menus com dados atualizados do admin
-    } else {
-        document.getElementById('aba-botao-admin').classList.add('active');
-        document.getElementById('aba-conteudo-admin').classList.add('active');
+    if(destino === 'orcamento') {
+        document.getElementById('abaOrcamento').classList.add('active');
+        document.getElementById('containerOrcamento').classList.add('active');
+    } else if(destino === 'admin') {
+        document.getElementById('abaAdmin').classList.add('active');
+        document.getElementById('containerAdmin').classList.add('active');
     }
 }
 
-/* NAVEGAÇÃO DE SUBABAS DO GERENCIADOR (ADMIN) */
-function switchSubTab(e, subId) {
-    document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.sub-conteudo').forEach(c => c.classList.remove('active'));
-    e.target.classList.add('active');
-    document.getElementById(subId).classList.add('active');
+function solicitarAcessoAdmin() {
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('modalLogin').style.display = 'flex';
 }
 
-/* CONTROLE DE LOGIN DO GERENCIADOR */
-function verificarCredenciaisAdmin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
+function fecharModalLogin() {
+    document.getElementById('modalLogin').style.display = 'none';
+    mudarAbaPrincipal('orcamento');
+}
+
+function validarCredenciaisAdmin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
     
-    if (user === 'Comvil' && pass === 'comvil2026') {
-        document.getElementById('login-restrito').style.display = 'none';
-        document.getElementById('painel-validado').style.display = 'block';
-        renderAllAdminTables();
+    if(u === "Comvil" && p === "comvil2026") {
+        document.getElementById('modalLogin').style.display = 'none';
+        mudarAbaPrincipal('admin');
     } else {
-        alert('Credenciais inválidas! Tente novamente.');
+        alert("Erro: Usuário ou Senha inválidos!");
     }
 }
 
-/* MÁSCARA E FORMATAÇÃO */
+/* =================================================== */
+/* LOGICA DO FORMULÁRIO COMERCIAL (INDEX) */
+/* =================================================== */
 function mascaraTelefone(input) {
     let v = input.value.replace(/\D/g, "");
     if (v.length > 11) v = v.substring(0, 11);
-    if (v.length > 10) {
-        v = v.replace(/^(\d{2})(\d{5})(\d{4})\$/, "(\$1) \$2-\$3");
-    } else if (v.length > 6) {
-        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})\$/, "(\$1) \$2-\$3");
-    } else if (v.length > 2) {
-        v = v.replace(/^(\d{2})(\d{0,5})\$/, "(\$1) \$2");
-    } else if (v.length > 0) {
-        v = v.replace(/^(\d{0,2})\$/, "(\$1");
-    }
+    if (v.length > 10) { v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3"); } 
+    else if (v.length > 6) { v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3"); } 
+    else if (v.length > 2) { v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2"); } 
+    else if (v.length > 0) { v = v.replace(/^(\d{0,2})$/, "($1"); }
     input.value = v;
 }
 
-function formatarMoeda(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function carregarMenusGerador() {
+    const pSel = document.getElementById("selectProdutoConfigurado"); pSel.innerHTML = '';
+    database.produtosConfigurados.forEach(p => {
+        let opt = new Option(p.nomeCompleto, p.id); opt.dataset.preco = p.precoBase; pSel.add(opt);
+    });
+    const cSel = document.getElementById("selectCordao"); cSel.innerHTML = '';
+    database.cordoes.forEach(c => {
+        let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cSel.add(opt);
+    });
+    const qSel = document.getElementById("qtd"); qSel.innerHTML = '';
+    database.quantidades.forEach(q => { qSel.add(new Option(q + " un", q)); });
 }
 
-/* CARREGAMENTO DINÂMICO DOS MENUS SELECT NO ORÇAMENTO */
-function carregarMenusUnificados() {
-    const produtoSel = document.getElementById("selectProdutoConfigurado");
-    if(produtoSel) {
-        produtoSel.innerHTML = '';
-        database.produtosConfigurados.forEach((prod) => {
-            let opt = new Option(prod.nomeCompleto, prod.id);
-            opt.dataset.preco = prod.precoBase;
-            produtoSel.add(opt);
-        });
-    }
+function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-    const cordaoSel = document.getElementById("selectCordao");
-    if(cordaoSel) {
-        cordaoSel.innerHTML = '';
-        database.cordoes.forEach((c) => {
-            let opt = new Option(c.nome, c.nome);
-            opt.dataset.preco = c.preco;
-            cordaoSel.add(opt);
-        });
-    }
+function calcularValoresAtuais() {
+    const prodSel = document.getElementById("selectProdutoConfigurado"); const item = prodSel.options[prodSel.selectedIndex];
+    const cordaoSel = document.getElementById("selectCordao"); const cordao = cordaoSel.options[cordaoSel.selectedIndex];
+    const corSelecionada = document.getElementById("selectCores").value;
+    const temIlhos = document.getElementById("selectIlhos").value === "Sim";
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
+    const qtd = parseInt(document.getElementById("qtd").value) || 500;
+    
+    let pBase = item ? parseFloat(item.dataset.preco || 0) : 0;
+    let pCordao = cordao ? parseFloat(cordao.dataset.preco || 0) : 0;
+    let pIlhos = (temIlhos && database.valoresAcabamento) ? parseFloat(database.valoresAcabamento.ilhos || 0) : 0;
+    let pFuro = (temFuroLaco && database.valoresAcabamento) ? parseFloat(database.valoresAcabamento.furoLaco || 0) : 0;
+    let pCores = (database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) ? parseFloat(database.valoresAcabamento.cores[corSelecionada]) : 0;
 
-    const qtdSel = document.getElementById("qtd");
-    if(qtdSel) {
-        qtdSel.innerHTML = '';
-        database.quantidades.forEach((q) => {
-            let opt = new Option(q + " un", q);
-            qtdSel.add(opt);
-        });
+    // FÓRMULA MATEMÁTICA ATUALIZADA: ((Produto + Ilhós + Alça + Furo) * Quantidade + Cores) * 1.70
+    let somaUnitarioFisico = pBase + pIlhos + pCordao + pFuro;
+    let subtotalFisicoLote = somaUnitarioFisico * qtd;
+    let custoTotalAntesDoLucro = subtotalFisicoLote + pCores;
+    
+    if (qtd > 2000) {
+        let blocosDeMil = Math.ceil((qtd - 2000) / 1000);
+        custoTotalAntesDoLucro += (blocosDeMil * 50.00);
     }
+    
+    let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
+    return { custoUnitario: totalLoteComMargem / qtd, qtd, total: totalLoteComMargem, itemSelecionado: item, cordaoSelecionado: cordao, corSelecionada, temFuroLaco, temIlhos };
 }
 
-/* LÓGICA DE RENDERIZAÇÃO DAS TABELAS ADMINISTRATIVAS EDITÁVEIS */
-function renderAllAdminTables() {
-    const tbodyProd = document.querySelector('#tableProdutos tbody');
-    if(tbodyProd) {
-        tbodyProd.innerHTML = '';
-        database.produtosConfigurados.forEach((p, idx) => {
-            tbodyProd.innerHTML += `<tr>
-                <td class="w-nome"><input type="text" class="table-input" value="${p.nomeCompleto}" onchange="atualizarDadosInline('produtosConfigurados', ${idx}, 'nomeCompleto', this.value)"></td>
-                <td class="w-preco"><input type="number" step="0.01" class="table-input" value="${p.precoBase}" onchange="atualizarDadosInline('produtosConfigurados', ${idx}, 'precoBase', this.value)"></td>
-                <td class="w-acao">
-                    <div class="actions-cell">
-                        <div class="order-arrows-column">
-                            <button class="btn-control" onclick="moverItem('produtosConfigurados', ${idx}, -1)">▲</button>
-                            <button class="btn-control" onclick="moverItem('produtosConfigurados', ${idx}, 1)">▼</button>
-                        </div>
-                        <button class="btn-del" onclick="removerItem('produtosConfigurados', ${idx})">Excluir</button>
-                    </div>
-                </td>
-            </tr>`;
-        });
-    }
-
-    const tbodyCord = document.querySelector('#tableCordoes tbody');
-    if(tbodyCord) {
-        tbodyCord.innerHTML = '';
-        database.cordoes.forEach((c, idx) => {
-            tbodyCord.innerHTML += `<tr>
-                <td class="w-nome"><input type="text" class="table-input" value="${c.nome}" onchange="atualizarDadosInline('cordoes', ${idx}, 'nome', this.value)"></td>
-                <td class="w-preco"><input type="number" step="0.01" class="table-input" value="${c.preco}" onchange="atualizarDadosInline('cordoes', ${idx}, 'preco', this.value)"></td>
-                <td class="w-acao">
-                    <div class="actions-cell">
-                        <div class="order-arrows-column">
-                            <button class="btn-control" onclick="moverItem('cordoes', ${idx}, -1)">▲</button>
-                            <button class="btn-control" onclick="moverItem('cordoes', ${idx}, 1)">▼</button>
-                        </div>
-                        <button class="btn-del" onclick="removerItem('cordoes', ${idx})">Excluir</button>
-                    </div>
-                </td>
-            </tr>`;
-        });
-    }
-
-    const tbodyQtd = document.querySelector('#tableQuantidades tbody');
-    if(tbodyQtd) {
-        tbodyQtd.innerHTML = '';
-        database.quantidades.forEach((q, idx) => {
-            tbodyQtd.innerHTML += `<tr>
-                <td style="width: 85%;"><input type="number" class="table-input" value="${q}" onchange="atualizarDadosInline('quantidades', ${idx}, null, this.value)"></td>
-                <td style="width: 15%;">
-                    <div class="actions-cell">
-                        <div class="order-arrows-column">
-                            <button class="btn-control" onclick="moverItem('quantidades', ${idx}, -1)">▲</button>
-                            <button class="btn-control" onclick="moverItem('quantidades', ${idx}, 1)">▼</button>
-                        </div>
-                        <button class="btn-del" onclick="removerItem('quantidades', ${idx})">Excluir</button>
-                    </div>
-                </td>
-            </tr>`;
-        });
-    }
-
-    // Carrega dados estruturais nos campos de entrada fixa
-    if(database.valoresAcabamento) {
-        document.getElementById('fixoIlhos').value = database.valoresAcabamento.ilhos || 0;
-        document.getElementById('fixoFuro').value = database.valoresAcabamento.furoLaco || 0;
-        if(database.valoresAcabamento.cores) {
-            document.getElementById('cor1x0').value = database.valoresAcabamento.cores['1x0'] || 0;
-            document.getElementById('cor2x0').value = database.valoresAcabamento.cores['2x0'] || 0;
-            document.getElementById('cor4x0').value = database.valoresAcabamento.cores['4x0'] || 0;
-            document.getElementById('cor4x1').value = database.valoresAcabamento.cores['4x1'] || 0;
-        }
-    }
+function obterNumeroIdentificador() {
+    const campoNum = document.getElementById("numOrcamento").value.trim(); if(campoNum) return campoNum;
+    const d = new Date(); return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
 }
 
-/* FUNÇÕES DE GERENCIAMENTO
+function gerarVisualizacaoTela() {
+    const nome = document.getElementById("nomeCliente").value.trim(); const tel = document.getElementById("telCliente").value.trim();
+    if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
+    
+    const dadosComerciais = calcularValoresAtuais();
+    const inputNumero = document.getElementById("numOrcamento");
+    if (!inputNumero.value.trim()) inputNumero.value = obterNumeroIdentificador();
+    
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
+    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> \({nome} <br> <strong>Telefone:</strong>\){tel}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> \({dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.text : ''}<br><strong>Cores:</strong> \){dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> \({dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> \){dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.text : ''}`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> \({dadosComerciais.qtd} un \vert{} <strong>Unitário de Venda:</strong> \){formatarMoeda(dadosComerciais.cust

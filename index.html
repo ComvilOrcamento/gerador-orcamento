@@ -243,7 +243,6 @@ function gerarVisualizacaoTela() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
-// NOVA FUNÇÃO UTILITÁRIA: Quebra linhas automaticamente de acordo com uma largura máxima (maxWidth)
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     let words = text.split(' ');
     let line = '';
@@ -262,7 +261,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
         }
     }
     ctx.fillText(line, x, currentY);
-    return currentY + lineHeight; // Retorna a próxima posição Y utilizável
+    return currentY + lineHeight;
 }
 
 function abrirImagemNovaAba() {
@@ -276,7 +275,6 @@ function abrirImagemNovaAba() {
     const canvas = document.getElementById("canvasEspelho");
     const ctx = canvas.getContext("2d");
     
-    // Aumentamos levemente a altura do canvas para acomodar o texto com folga caso quebre linhas
     canvas.width = 600; canvas.height = 800;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
@@ -303,7 +301,7 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
-    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Specifications Técnicas do Pedido");
+    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
     let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
@@ -318,13 +316,12 @@ function abrirImagemNovaAba() {
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
     
-    // CORREÇÃO VISUAL: Renderização controlada das observações em bloco com quebra dinâmica de linha
     ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
     
     ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
-    letstartY = 495;
-    const maxTextWidth = 510; // 530px da caixa menos as margens internas de 10px em cada lado
+    let startY = 495;
+    const maxTextWidth = 510; 
     const lineSpacing = 16;
 
     startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);

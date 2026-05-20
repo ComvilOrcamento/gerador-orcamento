@@ -98,6 +98,9 @@
             <option value="500">500 un</option>
             <option value="1000">1000 un</option>
             <option value="2000">2000 un</option>
+            <option value="3000">3000 un</option>
+            <option value="4000">4000 un</option>
+            <option value="5000">5000 un</option>
         </select>
     </div>
 
@@ -189,7 +192,6 @@ function carregarMenusUnificados() {
     });
 }
 
-// CORREÇÃO: Função auxiliar para formatar em Real Brasileiro (R$)
 function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -202,22 +204,39 @@ function calcularValoresAtuais() {
     const corSelecionada = document.getElementById("selectCores").value;
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
-    
-    let custoUnitario = 0;
-    if (itemSelecionado) custoUnitario += parseFloat(itemSelecionado.dataset.preco || 0);
-    if (cordaoSelecionado) custoUnitario += parseFloat(cordaoSelecionado.dataset.preco || 0);
-    
-    if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
-        custoUnitario += parseFloat(database.valoresAcabamento.cores[corSelecionada]);
-    }
-    if(temFuroLaco && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
-    if(temIlhos && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
-    
-    // CORREÇÃO: Aplica a margem adicional de 70% sobre o custo base calculado (Custo * 1.70)
-    custoUnitario = custoUnitario * 1.70;
-    
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
-    return { custoUnitario, qtd, total: custoUnitario * qtd, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
+    
+    // 1. Custo Unitário Físico Base (Sacola + Alça + Acabamentos estruturais)
+    let custoUnitarioFisico = 0;
+    if (itemSelecionado) custoUnitarioFisico += parseFloat(itemSelecionado.dataset.preco || 0);
+    if (cordaoSelecionado) custoUnitarioFisico += parseFloat(cordaoSelecionado.dataset.preco || 0);
+    if (temFuroLaco && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.furoLaco || 0);
+    if (temIlhos && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.ilhos || 0);
+    
+    // Aplica os 70% de margem no Custo Unitário Físico Base
+    custoUnitarioFisico = custoUnitarioFisico * 1.70;
+    
+    // 2. Taxa fixa de Cores (Adicionada com os 70% comerciais aplicados, sem multiplicar pela Qtd)
+    let taxaFixaCores = 0;
+    if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+        taxaFixaCores = parseFloat(database.valoresAcabamento.cores[corSelecionada]) * 1.70;
+    }
+    
+    // 3. NOVO: Acréscimo escalonado industrial de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
+    let taxaExcedenteEscala = 0;
+    if (qtd > 2000) {
+        let unidadesExcedentes = qtd - 2000;
+        let blocosDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        taxaExcedenteEscala = blocosDeMil * 50.00;
+    }
+    
+    // 4. Monta o valor total somando as taxas de lote fixas ao subtotal de tiragem física
+    let totalLote = (custoUnitarioFisico * qtd) + taxaFixaCores + taxaExcedenteEscala;
+    
+    // Calcula o unitário médio ponderado exibido na nota
+    let custoUnitarioExibido = totalLote / qtd;
+    
+    return { custoUnitario: custoUnitarioExibido, qtd, total: totalLote, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
 }
 
 function obterNumeroIdentificador() {
@@ -245,9 +264,7 @@ function gerarVisualizacaoTela() {
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    
-    // CORREÇÃO VISUAL DA TELA: Exibe formatado em R$ com a margem inclusa
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total: ${formatarMoeda(dadosComerciais.total)}</strong>`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário Médio:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
@@ -325,8 +342,7 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     
-    // CORREÇÃO VISUAL DO CANVAS: Aplica a string em formato nacional R$ na montagem gráfica
-    ctx.fillText("Preço Unitário Calculado: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillText("Preço Unitário Médio: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
     ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     
@@ -386,7 +402,7 @@ function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); stroke = ctx.stroke();
 }
 </script>
 </body>

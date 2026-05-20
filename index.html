@@ -7,8 +7,19 @@
     
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        body { background-color: #f4f4f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* SISTEMA DE ABAS FIXO NO TOPO */
+        .abas-navegacao { display: flex; gap: 10px; width: 100%; max-width: 600px; margin-bottom: 20px; border-bottom: 2px solid #003366; padding-bottom: 10px; }
+        .aba-link { padding: 10px 20px; border: 1px solid #ccc; border-radius: 8px 8px 0 0; background: #e4e4e7; cursor: pointer; font-weight: bold; color: #555; border-bottom: none; }
+        .aba-link.ativa { background: #003366; color: white; border-color: #003366; }
+        
+        /* CONTÊNERES DAS TELAS */
+        .tela-painel { display: none; width: 100%; max-width: 600px; }
+        .tela-painel.ativa { display: block; }
+        
+        /* DESIGN ORIGINAL PRESERVADO */
+        .container { background: white; width: 100%; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
         h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
@@ -37,103 +48,127 @@
 </head>
 <body>
 
-<!-- Modificado para tag <form> para garantir a validação nativa do atributo required -->
-<form class="container" id="formOrcamento" onsubmit="event.preventDefault(); gerarVisualizacaoTela();">
-    <h1>Novo Orçamento</h1>
-
-    <h2>Dados do cliente</h2>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Nome *</label>
-        <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
-    </div>
-    <div class="row">
-        <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
-        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
+    <!-- MENUS DE SELEÇÃO DE TELA (Com a nova aba vazia incluída) -->
+    <div class="abas-navegacao">
+        <button class="aba-link ativa" onclick="mudarAba('aba-orcamento', this)">Orçamento de Sacolas</button>
+        <button class="aba-link" onclick="mudarAba('aba-nova', this)">Nova Aba</button>
     </div>
 
-    <h2>Itens do orçamento</h2>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Configuração do Produto Base *</label>
-        <select id="selectProdutoConfigurado" required></select>
-    </div>
-    
-    <div class="row">
-        <div class="field">
-            <label>Impressão / Cores *</label>
-            <select id="selectCores" required>
-                <option value="1x0">1x0</option>
-                <option value="2x0">2x0</option>
-                <option value="4x0">4x0</option>
-                <option value="4x1">4x1</option>
-            </select>
-        </div>
-        <div class="field">
-            <label>Acabamento com Ilhós *</label>
-            <select id="selectIlhos" required>
-                <option value="Não">Não</option>
-                <option value="Sim">Sim</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="field">
-            <label>Tipo de Cordão / Alça *</label>
-            <select id="selectCordao" required></select>
-        </div>
-        <div class="field">
-            <label>Furo para Laço *</label>
-            <select id="selectFuroLaco" required>
-                <option value="Não">Não</option>
-                <option value="Sim">Sim</option>
-            </select>
-        </div>
-    </div>
+    <!-- TELA 1: FORMULÁRIO DE ORÇAMENTO -->
+    <div id="aba-orcamento" class="tela-painel ativa">
+        <form class="container" id="formOrcamento" onsubmit="event.preventDefault(); gerarVisualizacaoTela();">
+            <h1>Novo Orçamento</h1>
 
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Quantidade Mínima *</label>
-        <select id="qtd" required></select>
-    </div>
-
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Nome do vendedor</label>
-        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
-    </div>
-
-    <button type="submit" class="btn-principal">Gerar Orçamento</button>
-
-    <div id="bloco-resultado" style="display: none;">
-        <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
-            <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
-            <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
-        </div>
-
-        <div id="area-orcamento">
-            <div class="logos-header">
-                <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
-                <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
+            <h2>Dados do cliente</h2>
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Nome *</label>
+                <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
             </div>
-            <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
-            <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
-            <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
-            <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
-        </div>
-        <canvas id="canvasEspelho" style="display:none;"></canvas>
-        
-        <div class="botoes-container">
-            <button type="button" class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+            <div class="row">
+                <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
+                <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
+            </div>
+
+            <h2>Itens do orçamento</h2>
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Configuração do Produto Base *</label>
+                <select id="selectProdutoConfigurado" required></select>
+            </div>
+            
+            <div class="row">
+                <div class="field">
+                    <label>Impressão / Cores *</label>
+                    <select id="selectCores" required>
+                        <option value="1x0">1x0</option>
+                        <option value="2x0">2x0</option>
+                        <option value="4x0">4x0</option>
+                        <option value="4x1">4x1</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Acabamento com Ilhós *</label>
+                    <select id="selectIlhos" required>
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="field">
+                    <label>Tipo de Cordão / Alça *</label>
+                    <select id="selectCordao" required></select>
+                </div>
+                <div class="field">
+                    <label>Furo para Laço *</label>
+                    <select id="selectFuroLaco" required>
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Quantidade Mínima *</label>
+                <select id="qtd" required></select>
+            </div>
+
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Nome do vendedor</label>
+                <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
+            </div>
+
+            <button type="submit" class="btn-principal">Gerar Orçamento</button>
+
+            <div id="bloco-resultado" style="display: none;">
+                <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
+                    <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
+                    <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
+                </div>
+
+                <div id="area-orcamento">
+                    <div class="logos-header">
+                        <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
+                        <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
+                    </div>
+                    <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
+                    <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
+                    <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
+                    <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
+                </div>
+                <canvas id="canvasEspelho" style="display:none;"></canvas>
+                
+                <div class="botoes-container">
+                    <button type="button" class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- TELA 2: NOVA ABA VAZIA -->
+    <div id="aba-nova" class="tela-painel">
+        <div class="container">
+            <h1>Nova Aba</h1>
+            <p style="color: #666; font-size: 14px; margin-top: 10px;">Esta área está limpa e vazia para receber novos conteúdos.</p>
         </div>
     </div>
-</form>
 
 <script>
 let database = { produtosConfigurados: [], cordoes: [], quantidades: [], valoresAcabamento: {} };
 
-// Configuração segura do objeto de imagem com CORS anônimo para evitar travamento do Canvas
 let objImgMinha = new Image();
 objImgMinha.crossOrigin = "anonymous"; 
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 objImgMinha.src = "logo-empresa.png";
+
+/* FUNÇÃO DE TRANSIÇÃO DE ABAS */
+function mudarAba(idAba, botaoClicado) {
+    document.querySelectorAll('.aba-link').forEach(btn => btn.classList.remove('ativa'));
+    document.querySelectorAll('.tela-painel').forEach(tela => tela.classList.remove('ativa'));
+    
+    botaoClicado.classList.add('ativa');
+    document.getElementById(idAba).classList.add('ativa');
+}
 
 function mascaraTelefone(input) {
     let v = input.value.replace(/\D/g, "");
@@ -145,13 +180,13 @@ function mascaraTelefone(input) {
     }
 
     if (v.length > 10) {
-        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})\$/, "(\$1) \$2-\$3");
     } else if (v.length > 6) {
-        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})\$/, "(\$1) \$2-\$3");
     } else if (v.length > 2) {
-        v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+        v = v.replace(/^(\d{2})(\d{0,5})\$/, "(\$1) \$2");
     } else {
-        v = v.replace(/^(\d{0,2})$/, "($1");
+        v = v.replace(/^(\d{0,2})\$/, "(\$1");
     }
     input.value = v;
 }
@@ -254,7 +289,6 @@ function calcularValoresAtuais() {
     }
     
     let precoCoresFixo = 0;
-    // Alterado para operador 'in' para que o valor 0.0 do 1x0 não seja invalidado como falso
     if (database.valoresAcabamento && database.valoresAcabamento.cores && corSelecionada in database.valoresAcabamento.cores) {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
@@ -269,7 +303,6 @@ function calcularValoresAtuais() {
         custoTotalAntesDoLucro += (blocosDeMil * 50.00);
     }
 
-    // Math.round adicionado nas frações de lucro para evitar dízimas de ponto flutuante do JavaScript
     let totalLoteComMargem = Math.round((custoTotalAntesDoLucro * 1.70) * 100) / 100;
     let precoUnitarioDeVenda = Math.round((totalLoteComMargem / qtd) * 100) / 100;
     
@@ -305,9 +338,9 @@ function gerarVisualizacaoTela() {
     }
     
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
-    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
+    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> \({nome} <br> <strong>Telefone:</strong>\){tel}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> \${detalhesBase}<br><strong>Cores:</strong> \({dadosComerciais.corSelecionada} \vert{} <strong>Ilhós:</strong> \){dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> \({nomeCordao} \vert{} <strong>Furo Laço:</strong> \){dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> \${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> \({formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote:\){formatarMoeda(dadosComerciais.total)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
@@ -334,7 +367,6 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     return currentY + lineHeight;
 }
 
-// A função desenharCaixaPdf foi movida para cima para evitar erros de referência ao ser chamada
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
@@ -387,7 +419,6 @@ function abrirImagemNovaAba() {
     let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
     let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
     
-    // Tratamento dinâmico de quebra com traço ou barra vertical dependendo do banco de dados
     let partes = detalhesTexto.includes(" - ") ? detalhesTexto.split(" - ") : detalhesTexto.split(" | ");
     ctx.fillText("• " + partes.slice(0, 2).join(" - "), 50, 298);
     if(partes.length > 2) ctx.fillText("• " + partes.slice(2).join(" - "), 50, 314);
@@ -404,7 +435,6 @@ function abrirImagemNovaAba() {
     
     ctx.textAlign = "left";
     
-    // Alturas e espaçamentos reajustados para prevenir encavalamento de texto de termos
     ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 475, 530, 140); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 475, 530, 140);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 495);
     
@@ -421,7 +451,7 @@ function abrirImagemNovaAba() {
     const novaAba = window.open("", "_blank");
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
-        const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
+        const nomeArquivo = `Orcamento_\({numeroFinal}_\){nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
         const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
 
@@ -437,23 +467,4 @@ function abrirImagemNovaAba() {
                     .btn-container { width: 100%; display: flex; justify-content: center; gap: 15px; }
                     .btn-download { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
                     .btn-download:hover { background: #004085; }
-                    .btn-whatsapp { background: #25D366; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
-                    .btn-whatsapp:hover { background: #128C7E; }
-                </style>
-            </head>
-            <body>
-                <img src="${dataUrl}" alt="Orçamento" />
-                <div class="btn-container">
-                    <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <!-- Endpoint oficial de envio do WhatsApp corrigido -->
-                    <a href="https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
-                </div>
-            </body>
-            </html>
-        `);
-        novaAba.document.close();
-    }
-}
-</script>
-</body>
-</html>
+                    .btn-whatsapp { background: #25D366

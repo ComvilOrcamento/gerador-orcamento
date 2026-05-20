@@ -40,32 +40,29 @@
   "cordoes": [
     {
       "nome": "Nylon",
-      "preco": 0.3
+      "preco": 0.4
     },
     {
       "nome": "Gorgurão",
-      "preco": 0.8
+      "preco": 0.6
     }
   ],
   "quantidades": [
     500,
     1000,
-    1500,
     2000,
     3000,
-    3500,
     4000,
-    4500,
     5000
   ],
   "valoresAcabamento": {
     "ilhos": 0.2,
-    "furoLaco": 0.15,
+    "furoLaco": 0.1,
     "cores": {
-      "1x0": 0,
-      "2x0": 0.15,
-      "4x0": 0.4,
-      "4x1": 0.4
+      "1x0": 630,
+      "2x0": 660,
+      "4x0": 720,
+      "4x1": 750
     }
   }
 }

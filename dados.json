@@ -2,15 +2,27 @@
   "produtosConfigurados": [
     {
       "id": 1,
-      "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho",
-      "detalhes": "Sacola | Tam: 25x35x10 | Papel Duplex 240g | Acabamento: Plastificação Brilho",
-      "precoBase": 4
+      "nomeCompleto": "Sacola 17x18x8 - Offset 150g",
+      "detalhes": "Sem Revestimento",
+      "precoBase": 3
     },
     {
       "id": 2,
-      "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca",
-      "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca",
-      "precoBase": 4.5
+      "nomeCompleto": "Sacola 17x18x8 - Offset 180g",
+      "detalhes": "Sem Revestimento",
+      "precoBase": 3.2
+    },
+    {
+      "id": 3,
+      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g",
+      "detalhes": "Plasificada",
+      "precoBase": 3
+    },
+    {
+      "id": 4,
+      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g",
+      "detalhes": "Sem Revestimento",
+      "precoBase": 3.4
     }
   ],
   "cordoes": [
@@ -23,14 +35,26 @@
       "preco": 0.8
     }
   ],
+  "quantidades": [
+    250,
+    500,
+    1000,
+    1500,
+    2000,
+    3000,
+    3500,
+    4000,
+    4500,
+    5000
+  ],
   "valoresAcabamento": {
-    "ilhos": 0.15,
-    "furoLaco": 0.05,
+    "ilhos": 0.2,
+    "furoLaco": 0.15,
     "cores": {
-      "1x0": 400,
-      "2x0": 430,
-      "4x0": 500,
-      "4x1": 550
+      "1x0": 0,
+      "2x0": 0.15,
+      "4x0": 0.4,
+      "4x1": 0.4
     }
   }
 }

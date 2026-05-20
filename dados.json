@@ -4,19 +4,19 @@
       "id": 2,
       "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 390
+      "precoBase": 0.78
     },
     {
       "id": 6,
       "nomeCompleto": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 640
+      "precoBase": 0.64
     },
     {
       "id": 7,
       "nomeCompleto": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 1140
+      "precoBase": 0.57
     },
     {
       "id": 5,
@@ -27,45 +27,42 @@
     {
       "id": 4,
       "nomeCompleto": "Sacola 17x18x8 - Duplex 190g - sem revestimento",
-      "detalhes": "Sem Revestimento",
+      "detalhes": "Sacola 17x18x8 - Duplex 190g - sem revestimento",
       "precoBase": 3
     },
     {
       "id": 3,
       "nomeCompleto": "Sacola 17x18x8 - Duplex 190g + Hot Stamping",
-      "detalhes": "Plasificada",
+      "detalhes": "Sacola 17x18x8 - Duplex 190g + Hot Stamping",
       "precoBase": 3.5
     }
   ],
   "cordoes": [
     {
       "nome": "Nylon",
-      "preco": 0.3
+      "preco": 0.2
     },
     {
       "nome": "Gorgurão",
-      "preco": 0.8
+      "preco": 0.28
     }
   ],
   "quantidades": [
     500,
     1000,
-    1500,
     2000,
     3000,
-    3500,
     4000,
-    4500,
     5000
   ],
   "valoresAcabamento": {
     "ilhos": 0.2,
-    "furoLaco": 0.15,
+    "furoLaco": 0.1,
     "cores": {
-      "1x0": 0,
-      "2x0": 0.15,
-      "4x0": 0.4,
-      "4x1": 0.4
+      "1x0": 480,
+      "2x0": 510,
+      "4x0": 580,
+      "4x1": 610
     }
   }
 }

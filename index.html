@@ -99,9 +99,15 @@
         </select>
     </div>
 
-    <div class="field">
-        <label>Nome do vendedor</label>
-        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
+    <div class="row">
+        <div class="field">
+            <label>Nome do vendedor</label>
+            <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
+        </div>
+        <div class="field">
+            <label>Número do orçamento</label>
+            <input type="text" id="numOrcamento" placeholder="Ex: 0024 (Opcional)">
+        </div>
     </div>
 
     <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
@@ -110,6 +116,7 @@
         <div id="area-orcamento">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
+                <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
             </div>
             <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
@@ -204,6 +211,15 @@ function calcularValoresAtuais() {
     return { custoUnitario, qtd, total: custoUnitario * qtd, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
 }
 
+function obterNumeroIdentificador() {
+    const campoNum = document.getElementById("numOrcamento").value.trim();
+    if(campoNum) return campoNum;
+    
+    // Fallback: Gera um número baseado no timestamp para não ficar em branco
+    const d = new Date();
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
+}
+
 function gerarVisualizacaoTela() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
@@ -213,7 +229,9 @@ function gerarVisualizacaoTela() {
     const dadosComerciais = calcularValoresAtuais();
     const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
+    const numeroFinal = obterNumeroIdentificador();
 
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong>Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
@@ -235,6 +253,7 @@ function abrirImagemNovaAba() {
     const ctx = canvas.getContext("2d");
     canvas.width = 600; canvas.height = 780;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     try {
         let maxAlturaLogo = 50;
         let larguraOriginal = objImgMinha.naturalWidth || objImgMinha.width || 150;
@@ -244,6 +263,17 @@ function abrirImagemNovaAba() {
         if(larguraCalculada > 220) { larguraCalculada = 220; maxAlturaLogo = larguraCalculada / proporcaoLogo; }
         ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
     } catch(e){}
+
+    // ADICIONA O NUMERADOR COMERCIAL NO CANTO SUPERIOR DIREITO DO CANVAS
+    const numeroFinal = obterNumeroIdentificador();
+    ctx.fillStyle = "#333333";
+    ctx.font = "bold 14px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60);
+
+    // Reseta o alinhamento para o restante dos desenhos de texto
+    ctx.textAlign = "left";
+
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
@@ -276,10 +306,9 @@ function abrirImagemNovaAba() {
     const novaAba = window.open("", "_blank");
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
-        const nomeArquivo = `Orcamento_${nome.replace(/\s+/g, '_')}.jpg`;
-        
-        // Garante o isolamento completo de números limpos
+        const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
+        
         const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
 
         novaAba.document.write(`
@@ -300,7 +329,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="https://api.whatsapp.com/send?phone=55` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="https://whatsapp.com` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>
@@ -311,7 +340,7 @@ function abrirImagemNovaAba() {
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; strokeRect = ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();

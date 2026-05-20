@@ -206,26 +206,26 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    // 1. Soma dos custos de fabricação física unitária (Custo Crú de Fábrica)
+    // 1. CORREÇÃO MATEMÁTICA: Soma estrita dos insumos físicos unitários forçando floats limpos
     let custoUnitarioFisico = 0;
     if (itemSelecionado) custoUnitarioFisico += parseFloat(itemSelecionado.dataset.preco || 0);
     if (cordaoSelecionado) custoUnitarioFisico += parseFloat(cordaoSelecionado.dataset.preco || 0);
     if (temFuroLaco && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.furoLaco || 0);
     if (temIlhos && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.ilhos || 0);
     
-    // 2. Multiplica a soma física crúa pela quantidade solicitada
+    // 2. Multiplicação do custo físico unitário consolidado pela quantidade de sacolas
     let subtotalFisicoLote = custoUnitarioFisico * qtd;
     
-    // 3. Captura o valor fixo do setup de Cores
+    // 3. Captura o valor fixo do setup de Cores do banco de dados
     let custoFixoCores = 0;
     if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
-        custoFixoCores = parseFloat(database.valoresAcabamento.cores[corSelecionada]);
+        custoFixoCores = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
     
-    // 4. Soma o subtotal das sacolas com a taxa fixa de Cores antes da margem
+    // 4. Soma o subtotal das sacolas com o valor do campo cores
     let custoTotalAntesDoLucro = subtotalFisicoLote + custoFixoCores;
     
-    // 5. NOVO: Acréscimo escalonado industrial de R$ 50,00 a cada bloco de 1000 excedente a 2000 un (Custo operacional de máquina)
+    // 5. Aplica o acréscimo de escala comercial de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
     let taxaExcedenteEscala = 0;
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
@@ -234,10 +234,10 @@ function calcularValoresAtuais() {
     }
     custoTotalAntesDoLucro += taxaExcedenteEscala;
     
-    // 6. MODIFICAÇÃO SOLICITADA: Aplica a margem de 70% sobre a soma de tudo (Custo Total do Lote * 1.70)
+    // 6. MODIFICAÇÃO GLOBAL: Aplica os 70% de margem sobre a somatória total final obtida
     let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
     
-    // Calcula o preço unitário médio de venda final para exibição
+    // Divide o lote com lucro pela quantidade para obter o preço unitário médio de venda coerente
     let precoUnitarioDeVenda = totalLoteComMargem / qtd;
     
     return { custoUnitario: precoUnitarioDeVenda, qtd, total: totalLoteComMargem, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
@@ -346,7 +346,7 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     
-    ctx.fillText("Preço Unitário Mágico de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillText("Preço Unitário Média de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
     ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     

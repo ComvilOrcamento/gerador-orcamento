@@ -94,14 +94,8 @@
 
     <div class="field" style="margin-bottom: 12px;">
         <label>Quantidade Mínima *</label>
-        <select id="qtd">
-            <option value="500">500 un</option>
-            <option value="1000">1000 un</option>
-            <option value="2000">2000 un</option>
-            <option value="3000">3000 un</option>
-            <option value="4000">4000 un</option>
-            <option value="5000">5000 un</option>
-        </select>
+        <!-- AGORA REFEITO COMO DROPDOWN DINÂMICO -->
+        <select id="qtd"></select>
     </div>
 
     <div class="field" style="margin-bottom: 12px;">
@@ -136,7 +130,7 @@
 </div>
 
 <script>
-let database = { produtosConfigurados: [], cordoes: [], valoresAcabamento: {} };
+let database = { produtosConfigurados: [], cordoes: [], quantidades: [], valoresAcabamento: {} };
 let objImgMinha = new Image();
 
 objImgMinha.src = "logo-empresa.png";
@@ -164,6 +158,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola | Tam: 18x24x8 | Papel Offset 180g | Acabamento: Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.4 } }
 };
 
@@ -183,12 +178,21 @@ function carregarMenusUnificados() {
         opt.dataset.preco = prod.precoBase;
         produtoSel.add(opt);
     });
+    
     const cordaoSel = document.getElementById("selectCordao");
     cordaoSel.innerHTML = '';
     database.cordoes.forEach((c) => {
         let opt = new Option(c.nome, c.nome);
         opt.dataset.preco = c.preco;
         cordaoSel.add(opt);
+    });
+
+    // RENDERIZAÇÃO DINÂMICA DAS TIRAGENS DO JSON
+    const qtdSel = document.getElementById("qtd");
+    qtdSel.innerHTML = '';
+    const listaQtds = (database.quantidades && database.quantidades.length > 0) ? database.quantidades : bancoReserva.quantidades;
+    listaQtds.forEach((q) => {
+        qtdSel.add(new Option(q + " un", q));
     });
 }
 
@@ -206,23 +210,19 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    // 1. Custo Unitário Físico Base (Sacola + Alça + Acabamentos estruturais)
     let custoUnitarioFisico = 0;
     if (itemSelecionado) custoUnitarioFisico += parseFloat(itemSelecionado.dataset.preco || 0);
     if (cordaoSelecionado) custoUnitarioFisico += parseFloat(cordaoSelecionado.dataset.preco || 0);
     if (temFuroLaco && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.furoLaco || 0);
     if (temIlhos && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.ilhos || 0);
     
-    // Aplica os 70% de margem no Custo Unitário Físico Base
     custoUnitarioFisico = custoUnitarioFisico * 1.70;
     
-    // 2. Taxa fixa de Cores (Adicionada com os 70% comerciais aplicados, sem multiplicar pela Qtd)
     let taxaFixaCores = 0;
     if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
         taxaFixaCores = parseFloat(database.valoresAcabamento.cores[corSelecionada]) * 1.70;
     }
     
-    // 3. NOVO: Acréscimo escalonado industrial de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
     let taxaExcedenteEscala = 0;
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
@@ -230,10 +230,7 @@ function calcularValoresAtuais() {
         taxaExcedenteEscala = blocosDeMil * 50.00;
     }
     
-    // 4. Monta o valor total somando as taxas de lote fixas ao subtotal de tiragem física
     let totalLote = (custoUnitarioFisico * qtd) + taxaFixaCores + taxaExcedenteEscala;
-    
-    // Calcula o unitário médio ponderado exibido na nota
     let custoUnitarioExibido = totalLote / qtd;
     
     return { custoUnitario: custoUnitarioExibido, qtd, total: totalLote, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
@@ -402,7 +399,7 @@ function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); stroke = ctx.stroke();
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
 }
 </script>
 </body>

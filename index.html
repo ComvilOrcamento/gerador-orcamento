@@ -4,372 +4,454 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        /* SISTEMA DE ABAS SUPERIORES */
-        .abas-navegacao { display: flex; gap: 10px; width: 100%; max-width: 800px; margin-bottom: 20px; border-bottom: 2px solid #003366; padding-bottom: 10px; }
-        .nav-btn { padding: 12px 24px; border: 1px solid #cbd5e1; border-radius: 8px 8px 0 0; background: #f8fafc; cursor: pointer; font-weight: bold; color: #64748b; font-size: 14px; transition: all 0.2s; }
-        .nav-btn.active { background: #003366; color: white; border-color: #003366; }
+        /* SISTEMA DE ABAS FIXO NO TOPO */
+        .abas-navegacao { display: flex; gap: 10px; width: 100%; max-width: 600px; margin-bottom: 20px; border-bottom: 2px solid #003366; padding-bottom: 10px; }
+        .aba-link { padding: 10px 20px; border: 1px solid #ccc; border-radius: 8px 8px 0 0; background: #e4e4e7; cursor: pointer; font-weight: bold; color: #555; border-bottom: none; }
+        .aba-link.ativa { background: #003366; color: white; border-color: #003366; }
         
-        /* CONTÊINERES DAS TELAS */
-        .aba-painel { display: none; width: 100%; max-width: 800px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .aba-painel.active { display: block; }
+        /* CONTÊNERES DAS TELAS */
+        .tela-painel { display: none; width: 100%; max-width: 600px; }
+        .tela-painel.ativa { display: block; }
         
-        /* ESTILOS COMUNS */
+        /* DESIGN ORIGINAL PRESERVADO */
+        .container { background: white; width: 100%; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
         h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
         .field { flex: 1; display: flex; flex-direction: column; }
-        label { font-size: 11px; margin-bottom: 4px; color: #555; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
+        label { font-size: 11px; margin-bottom: 4px; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+        
         input:focus, select:focus { border-color: #0056b3; }
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
-        /* BOTÕES */
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
-        .btn-exportar { width: 100%; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         
-        /* GERENCIADOR INLINE (ESTILOS DO ANTIGO ADMIN) */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; table-layout: fixed; }
-        .data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: middle; overflow: hidden; }
-        .data-table th { background: #f8fafc; color: #334155; }
-        .table-input { width: 100%; padding: 4px; border: 1px solid transparent; background: transparent; font-size: 13px; }
-        .table-input:focus { border-color: #2563eb; background: #fff; outline: none; border-radius: 4px; }
-        .actions-cell { display: flex; align-items: center; gap: 4px; }
-        .order-arrows-column { display: flex; flex-direction: column; gap: 1px; }
-        .btn-control { border: 1px solid #cbd5e1; padding: 1px 4px; border-radius: 30px; cursor: pointer; font-size: 8px; background: #fff; }
-        .btn-del { background: #ef4444; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .action-zone { border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 25px; display: flex; gap: 15px; }
-        .btn-save-admin { flex: 1; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-export-admin { flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* PREVIEW E CANVAS */
+        .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
+        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .btn-exportar:hover { background: #004085; }
+        
         #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; }
-        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; }
-        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
+        .logo-box { flex: 1; display: flex; align-items: center; }
+        .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
+        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
         .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
         
-        .toast-notificacao { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #10b981; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: bold; transition: top 0.3s ease; z-index: 9999; border: 1px solid #10b981; }
-        .toast-notificacao.show { top: 20px; }
+        /* SUB-ELEMENTO DO GERENCIADOR EMBUTIDO */
+        .iframe-container { width: 100%; height: 700px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; }
     </style>
 </head>
 <body>
 
-<div id="toast" class="toast-notificacao">✓ Configurações salvas!</div>
-
-<!-- BARRA DE ABAS PARA CHAVEAMENTO DE TELA -->
-<div class="abas-navegacao">
-    <button id="btn-tab-orcamento" class="nav-btn active" onclick="mudarAba('tela-orcamento')">Orçamento de Sacolas</button>
-    <button id="btn-tab-gerenciador" class="nav-btn" onclick="tentarAcessarGerenciador()">Gerenciador de Dados</button>
-</div>
-
-<!-- TELA 1: EMISSÃO DE ORÇAMENTOS -->
-<div id="tela-orcamento" class="aba-painel active">
-    <h1>Novo Orçamento</h1>
-    <h2>Dados do cliente</h2>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Nome *</label>
-        <input type="text" id="nomeCliente" placeholder="Nome do cliente (Obrigatório)" required>
-    </div>
-    <div class="row">
-        <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" maxlength="15" required></div>
-        <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
+    <!-- MENUS DE SELEÇÃO DE TELA -->
+    <div class="abas-navegacao">
+        <button class="aba-link ativa" onclick="mudarAba('aba-orcamento', this)">Orçamento de Sacolas</button>
+        <button class="aba-link" onclick="mudarAba('aba-gerenciador', this)">Gerenciador de Dados</button>
     </div>
 
-    <h2>Itens do orçamento</h2>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Configuração do Produto Base *</label>
-        <select id="selectProdutoConfigurado"></select>
-    </div>
-    <div class="row">
-        <div class="field"><label>Impressão / Cores *</label><select id="selectCores"><option value="1x0">1x0</option><option value="2x0">2x0</option><option value="4x0">4x0</option><option value="4x1">4x1</option></select></div>
-        <div class="field"><label>Acabamento com Ilhós *</label><select id="selectIlhos"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-    </div>
-    <div class="row">
-        <div class="field"><label>Tipo de Cordão / Alça *</label><select id="selectCordao"></select></div>
-        <div class="field"><label>Furo para Laço *</label><select id="selectFuroLaco"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-    </div>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Quantidade Mínima *</label>
-        <select id="qtd"></select>
-    </div>
-    <div class="field" style="margin-bottom: 12px;">
-        <label>Nome do vendedor</label>
-        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
-    </div>
+    <!-- TELA 1: FORMULÁRIO DE ORÇAMENTO -->
+    <div id="aba-orcamento" class="tela-painel ativa">
+        <div class="container">
+            <h1>Novo Orçamento</h1>
 
-    <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
-
-    <div id="bloco-resultado" style="display: none;">
-        <div class="field" style="margin-bottom: 15px;">
-            <label>Número do Orçamento Gerado</label>
-            <input type="text" id="numOrcamento" readonly>
-        </div>
-        <div id="area-orcamento">
-            <div class="logos-header">
-                <div class="logo-box"><img src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
-                <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
+            <h2>Dados do cliente</h2>
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Nome *</label>
+                <input type="text" id="nomeCliente" placeholder="Nome do cliente ou Empresa (Obrigatório)" required>
             </div>
-            <div class="secao-preview"><div class="preview-titulo">Dados do Cliente</div><div id="text-dados-cliente"></div></div>
-            <div class="secao-preview"><div class="preview-titulo">Especificações</div><div id="text-dados-produto"></div></div>
-            <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
+            <div class="row">
+                <div class="field"><label>Telefone / WhatsApp *</label><input type="text" id="telCliente" placeholder="(00) 00000-0000 (Obrigatório)" oninput="mascaraTelefone(this)" maxlength="15" required></div>
+                <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
+            </div>
+
+            <h2>Itens do orçamento</h2>
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Configuração do Produto Base *</label>
+                <select id="selectProdutoConfigurado"></select>
+            </div>
+            
+            <div class="row">
+                <div class="field">
+                    <label>Impressão / Cores *</label>
+                    <select id="selectCores">
+                        <option value="1x0">1x0</option>
+                        <option value="2x0">2x0</option>
+                        <option value="4x0">4x0</option>
+                        <option value="4x1">4x1</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Acabamento com Ilhós *</label>
+                    <select id="selectIlhos">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="field">
+                    <label>Tipo de Cordão / Alça *</label>
+                    <select id="selectCordao"></select>
+                </div>
+                <div class="field">
+                    <label>Furo para Laço *</label>
+                    <select id="selectFuroLaco">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Quantidade Mínima *</label>
+                <select id="qtd"></select>
+            </div>
+
+            <div class="field" style="margin-bottom: 12px;">
+                <label>Nome do vendedor</label>
+                <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
+            </div>
+
+            <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
+
+            <div id="bloco-resultado" style="display: none;">
+                <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
+                    <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
+                    <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
+                </div>
+
+                <div id="area-orcamento">
+                    <div class="logos-header">
+                        <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
+                        <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
+                    </div>
+                    <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
+                    <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
+                    <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
+                    <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
+                </div>
+                <canvas id="canvasEspelho" style="display:none;"></canvas>
+                
+                <div class="botoes-container">
+                    <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
+                </div>
+            </div>
         </div>
-        <canvas id="canvasEspelho" style="display:none;"></canvas>
-        <button class="btn-exportar" onclick="abrirImagemNovaAba()">Exportar Orçamento</button>
-    </div>
-</div>
-
-<!-- TELA 2: GERENCIADOR DE DADOS INTERNO -->
-<div id="tela-gerenciador" class="aba-painel">
-    <h1>Gerenciador de Catálogo de Preços</h1>
-    
-    <h2>Adicionar Nova Sacola / Produto</h2>
-    <div class="form-row" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
-        <div class="field" style="flex:4;"><label>Nome Comercial</label><input type="text" id="prodNome" placeholder="Ex: Sacola Duplex 240g - 25x35x10"></div>
-        <div class="field" style="flex:1;"><label>Preço Base</label><input type="number" id="prodPreco" step="0.01" placeholder="4.00"></div>
-        <button class="btn-add" style="height:38px; padding:0 15px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;" onclick="adicionarProduto()">Adicionar</button>
-    </div>
-    <table class="data-table"><thead><tr><th style="width:70%;">Nome Comercial</th><th style="width:18%;">Preço Base</th><th style="width:12%;">Ações</th></tr></thead><tbody id="tableProdutosBody"></tbody></table>
-
-    <h2 style="margin-top:25px;">Adicionar Novo Cordão / Alça</h2>
-    <div class="form-row" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
-        <div class="field" style="flex:4;"><label>Tipo de Alça</label><input type="text" id="cordaoNome" placeholder="Ex: Gorgurão"></div>
-        <div class="field" style="flex:1;"><label>Preço Adicional</label><input type="number" id="cordaoPreco" step="0.01" placeholder="0.80"></div>
-        <button class="btn-add" style="height:38px; padding:0 15px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;" onclick="adicionarCordao()">Adicionar</button>
-    </div>
-    <table class="data-table"><thead><tr><th style="width:70%;">Tipo de Alça</th><th style="width:18%;">Preço Unitário</th><th style="width:12%;">Ações</th></tr></thead><tbody id="tableCordoesBody"></tbody></table>
-
-    <h2 style="margin-top:25px;">Adicionar Nova Quantidade Mínima</h2>
-    <div class="form-row" style="display:flex; gap:10px; margin-bottom:20px; align-items:flex-end;">
-        <div class="field" style="flex:5;"><label>Quantidade Mínima</label><input type="number" id="qtdValor" placeholder="Ex: 1500"></div>
-        <button class="btn-add" style="height:38px; padding:0 15px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;" onclick="adicionarQuantidade()">Adicionar</button>
-    </div>
-    <table class="data-table"><thead><tr><th style="width:88%;">Quantidade Comercial</th><th style="width:12%;">Ações</th></tr></thead><tbody id="tableQuantidadesBody"></tbody></table>
-
-    <h2 style="margin-top:25px;">Custos de Acabamentos Fixos</h2>
-    <div class="row">
-        <div class="field"><label>Custo Adicional Ilhós (R\$)</label><input type="number" id="fixoIlhos" step="0.01"></div>
-        <div class="field"><label>Custo Adicional Furo Laço (R\$)</label><input type="number" id="fixoFuro" step="0.01"></div>
-    </div>
-    <h2 style="margin-top:15px;">Custos de Impressão (Cores Fixo)</h2>
-    <div class="row">
-        <div class="field"><label>Cores 1x0 (R\$)</label><input type="number" id="cor1x0" step="0.01"></div>
-        <div class="field"><label>Cores 2x0 (R\$)</label><input type="number" id="cor2x0" step="0.01"></div>
-        <div class="field"><label>Cores 4x0 (R\$)</label><input type="number" id="cor4x0" step="0.01"></div>
-        <div class="field"><label>Cores 4x1 (R\$)</label><input type="number" id="cor4x1" step="0.01"></div>
     </div>
 
-    <div class="action-zone">
-        <button class="btn-save-admin" onclick="salvarAlteracoesLocais()">Salvar Alterações</button>
-        <button class="btn-export-admin" onclick="exportarJsonAtualizado()">Exportar dados.json</button>
+    <!-- TELA 2: GERENCIADOR ADMIN EMBUTIDO -->
+    <div id="aba-gerenciador" class="tela-painel">
+        <iframe src="admin.html" class="iframe-container"></iframe>
     </div>
-</div>
 
 <script>
-let database = {
-    "produtosConfigurados": [
-        { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "precoBase": 4.00 },
-        { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
-    ],
-    "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
-    "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
-    "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.4 } }
-};
-
+let database = { produtosConfigurados: [], cordoes: [], quantidades: [], valoresAcabamento: {} };
 let objImgMinha = new Image();
+
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
+
+/* FUNÇÃO DE TRANSIÇÃO DIRETA DE ABAS SEM RESTRIÇÕES */
+function mudarAba(idAba, botaoClicado) {
+    document.querySelectorAll('.aba-link').forEach(btn => btn.classList.remove('ativa'));
+    document.querySelectorAll('.tela-painel').forEach(tela => tela.classList.remove('ativa'));
+    
+    botaoClicado.classList.add('ativa');
+    document.getElementById(idAba).classList.add('ativa');
+    
+    // Recarrega o banco se voltar para a tela de orçamento para refletir novas alterações do admin
+    if (idAba === 'aba-orcamento') {
+        inicializarBancoDados();
+    }
+}
 
 function mascaraTelefone(input) {
     let v = input.value.replace(/\D/g, "");
     if (v.length > 11) v = v.substring(0, 11);
-    if (v.length > 10) { v = v.replace(/^(\d{2})(\d{5})(\d{4})\$/, "(\$1) \$2-\$3"); }
-    else if (v.length > 6) { v = v.replace(/^(\d{2})(\d{4})(\d{0,4})\$/, "(\$1) \$2-\$3"); }
-    else if (v.length > 2) { v = v.replace(/^(\d{2})(\d{0,5})\$/, "(\$1) \$2"); }
-    else if (v.length > 0) { v = v.replace(/^(\d{0,2})\$/, "(\$1"); }
+
+    if (v.length > 10) {
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    } else if (v.length > 6) {
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
+    } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+    } else if (v.length > 0) {
+        v = v.replace(/^(\d{0,2})$/, "($1");
+    }
     input.value = v;
 }
 
-window.onload = function() {
-    const cacheLocal = localStorage.getItem('comvil_catalogo_cache');
-    if (cacheLocal) {
-        database = JSON.parse(cacheLocal);
-        inicializarSistema();
-    } else {
-        fetch('dados.json')
-            .then(res => res.json())
-            .then(data => { database = data; inicializarSistema(); })
-            .catch(() => { inicializarSistema(); });
-    }
+const bancoReserva = {
+  "produtosConfigurados": [
+    { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "detalhes": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "precoBase": 4.00 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
+  ],
+  "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.4 } }
 };
 
-function inicializarSistema() {
-    carregarMenusFormulario();
-    renderizarTabelasAdmin();
-}
+window.onload = function() {
+    inicializarBancoDados();
+};
 
-/* SISTEMA DE LOGIN E SEGURANÇA CORRIGIDO */
-function tentarAcessarGerenciador() {
-    const usuarioDigitado = prompt("Digite o Usuário de Acesso:");
-    if (usuarioDigitado === null) return; // Cancelou
-    
-    const senhaDigitada = prompt("Digite a Senha de Acesso:");
-    if (senhaDigitada === null) return; // Cancelou
-
-    if (usuarioDigitado === "Usuário Comvil" && senhaDigitada === "comvil2026") {
-        mudarAba('tela-gerenciador');
+function inicializarBancoDados() {
+    const cacheAdmin = localStorage.getItem('comvil_catalogo_cache');
+    if (cacheAdmin) {
+        database = JSON.parse(cacheAdmin);
+        if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
+        carregarMenusUnificados();
     } else {
-        alert("Erro: Usuário ou Senha incorretos!");
+        fetch('dados.json')
+            .then(response => response.json())
+            .then(data => { 
+                database = data; 
+                if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
+                carregarMenusUnificados(); 
+            })
+            .catch(() => { database = bancoReserva; carregarMenusUnificados(); });
     }
 }
 
-function mudarAba(abaId) {
-    document.querySelectorAll('.aba-painel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById(abaId).classList.add('active');
-    if (abaId === 'tela-orcamento') {
-        document.getElementById('btn-tab-orcamento').classList.add('active');
-    } else {
-        document.getElementById('btn-tab-gerenciador').classList.add('active');
-    }
-}
-
-function carregarMenusFormulario() {
-    const pSel = document.getElementById("selectProdutoConfigurado"); pSel.innerHTML = '';
-    database.produtosConfigurados.forEach(p => {
-        let opt = new Option(p.nomeCompleto, p.id); opt.dataset.preco = p.precoBase; pSel.add(opt);
+function carregarMenusUnificados() {
+    const produtoSel = document.getElementById("selectProdutoConfigurado");
+    produtoSel.innerHTML = '';
+    database.produtosConfigurados.forEach((prod) => {
+        let opt = new Option(prod.nomeCompleto, prod.id);
+        opt.dataset.detalhes = prod.detalhes || prod.nomeCompleto;
+        opt.dataset.preco = prod.precoBase;
+        produtoSel.add(opt);
     });
-    const cSel = document.getElementById("selectCordao"); cSel.innerHTML = '';
-    database.cordoes.forEach(c => {
-        let opt = new Option(c.nome, c.nome); opt.dataset.preco = c.preco; cSel.add(opt);
+
+    const cordaoSel = document.getElementById("selectCordao");
+    cordaoSel.innerHTML = '';
+    database.cordoes.forEach((c) => {
+        let opt = new Option(c.nome, c.nome);
+        opt.dataset.preco = c.preco;
+        cordaoSel.add(opt);
     });
-    const qSel = document.getElementById("qtd"); qSel.innerHTML = '';
-    database.quantidades.forEach(q => { qSel.add(new Option(q + " un", q)); });
-}
 
-function renderizarTabelasAdmin() {
-    const tbProd = document.getElementById('tableProdutosBody'); tbProd.innerHTML = '';
-    database.produtosConfigurados.forEach((p, i) => {
-        tbProd.innerHTML += `<tr>
-            <td><input type="text" class="table-input" value="${p.nomeCompleto}" onchange="atualizarInline('produtosConfigurados', ${i}, 'nomeCompleto', this.value)"></td>
-            <td><input type="number" step="0.01" class="table-input" value="${p.precoBase}" onchange="atualizarInline('produtosConfigurados', ${i}, 'precoBase', this.value)"></td>
-            <td><div class="actions-cell"><div class="order-arrows-column"><button class="btn-control" onclick="moverItem('produtosConfigurados', ${i}, -1)">▲</button><button class="btn-control" onclick="moverItem('produtosConfigurados', ${i}, 1)">▼</button></div><button class="btn-del" onclick="removerItem('produtosConfigurados', ${i})">X</button></div></td>
-        </tr>`;
+    const qtdSel = document.getElementById("qtd");
+    qtdSel.innerHTML = '';
+    database.quantidades.forEach((q) => {
+        let opt = new Option(q + " un", q);
+        qtdSel.add(opt);
     });
-    const tbCord = document.getElementById('tableCordoesBody'); tbCord.innerHTML = '';
-    database.cordoes.forEach((c, i) => {
-        tbCord.innerHTML += `<tr>
-            <td><input type="text" class="table-input" value="${c.nome}" onchange="atualizarInline('cordoes', ${i}, 'nome', this.value)"></td>
-            <td><input type="number" step="0.01" class="table-input" value="${c.preco}" onchange="atualizarInline('cordoes', ${i}, 'preco', this.value)"></td>
-            <td><div class="actions-cell"><div class="order-arrows-column"><button class="btn-control" onclick="moverItem('cordoes', ${i}, -1)">▲</button><button class="btn-control" onclick="moverItem('cordoes', ${i}, 1)">▼</button></div><button class="btn-del" onclick="removerItem('cordoes', ${i})">X</button></div></td>
-        </tr>`;
-    });
-    const tbQtd = document.getElementById('tableQuantidadesBody'); tbQtd.innerHTML = '';
-    database.quantidades.forEach((q, i) => {
-        tbQtd.innerHTML += `<tr>
-            <td><input type="number" class="table-input" value="${q}" onchange="atualizarInline('quantidades', ${i}, null, this.value)"></td>
-            <td><div class="actions-cell"><div class="order-arrows-column"><button class="btn-control" onclick="moverItem('quantidades', ${i}, -1)">▲</button><button class="btn-control" onclick="moverItem('quantidades', ${i}, 1)">▼</button></div><button class="btn-del" onclick="removerItem('quantidades', ${i})">X</button></div></td>
-        </tr>`;
-    });
-    document.getElementById('fixoIlhos').value = database.valoresAcabamento.ilhos;
-    document.getElementById('fixoFuro').value = database.valoresAcabamento.furoLaco;
-    document.getElementById('cor1x0').value = database.valoresAcabamento.cores['1x0'] || 0;
-    document.getElementById('cor2x0').value = database.valoresAcabamento.cores['2x0'] || 0;
-    document.getElementById('cor4x0').value = database.valoresAcabamento.cores['4x0'] || 0;
-    document.getElementById('cor4x1').value = database.valoresAcabamento.cores['4x1'] || 0;
 }
 
-function moverItem(tipo, idx, dir) {
-    let target = idx + dir; if (target < 0 || target >= database[tipo].length) return;
-    let temp = database[tipo][idx]; database[tipo][idx] = database[tipo][target]; database[tipo][target] = temp;
-    renderizarTabelasAdmin();
+function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-function atualizarInline(tipo, idx, prop, val) {
-    if (tipo === 'quantidades') { database.quantidades[idx] = parseInt(val) || 0; }
-    else { database[tipo][idx][prop] = prop.includes('preco') || prop === 'precoBase' ? parseFloat(val) || 0 : val.trim(); }
-}
-function adicionarProduto() {
-    let n = document.getElementById('prodNome').value.trim(); let p = parseFloat(document.getElementById('prodPreco').value);
-    if(!n || isNaN(p)) return; database.produtosConfigurados.push({"id": Date.now(), "nomeCompleto": n, "precoBase": p});
-    document.getElementById('prodNome').value = ''; document.getElementById('prodPreco').value = ''; renderizarTabelasAdmin();
-}
-function adicionarCordao() {
-    let n = document.getElementById('cordaoNome').value.trim(); let p = parseFloat(document.getElementById('cordaoPreco').value);
-    if(!n || isNaN(p)) return; database.cordoes.push({"nome": n, "preco": p});
-    document.getElementById('cordaoNome').value = ''; document.getElementById('cordaoPreco').value = ''; renderizarTabelasAdmin();
-}
-function adicionarQuantidade() {
-    let v = parseInt(document.getElementById('qtdValor').value); if(isNaN(v)) return;
-    database.quantidades.push(v); document.getElementById('qtdValor').value = ''; renderizarTabelasAdmin();
-}
-function removerItem(tipo, idx) { database[tipo].splice(idx, 1); renderizarTabelasAdmin(); }
-
-function sincronizarObjetoAdmin() {
-    database.valoresAcabamento.ilhos = parseFloat(document.getElementById('fixoIlhos').value) || 0;
-    database.valoresAcabamento.furoLaco = parseFloat(document.getElementById('fixoFuro').value) || 0;
-    database.valoresAcabamento.cores['1x0'] = parseFloat(document.getElementById('cor1x0').value) || 0;
-    database.valoresAcabamento.cores['2x0'] = parseFloat(document.getElementById('cor2x0').value) || 0;
-    database.valoresAcabamento.cores['4x0'] = parseFloat(document.getElementById('cor4x0').value) || 0;
-    database.valoresAcabamento.cores['4x1'] = parseFloat(document.getElementById('cor4x1').value) || 0;
-}
-
-function salvarAlteracoesLocais() {
-    sincronizarObjetoAdmin(); localStorage.setItem('comvil_catalogo_cache', JSON.stringify(database));
-    carregarMenusFormulario(); const t = document.getElementById('toast'); t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-function exportarJsonAtualizado() {
-    sincronizarObjetoAdmin(); const blob = new Blob([JSON.stringify(database, null, 2)], { type: "application/json" });
-    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "dados.json"; link.click();
-}
-
-/* LÓGICA DE PREÇOS DO INDEX */
-function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
 function calcularValoresAtuais() {
-    const prodSel = document.getElementById("selectProdutoConfigurado"); const item = prodSel.options[prodSel.selectedIndex];
-    const cordaoSel = document.getElementById("selectCordao"); const cordao = cordaoSel.options[cordaoSel.selectedIndex];
-    const cor = document.getElementById("selectCores").value;
+    const prodSel = document.getElementById("selectProdutoConfigurado");
+    const itemSelecionado = prodSel.options[prodSel.selectedIndex];
+    const cordaoSel = document.getElementById("selectCordao");
+    const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
+    const corSelecionada = document.getElementById("selectCores").value;
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
-    const temFuro = document.getElementById("selectFuroLaco").value === "Sim";
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    let pBase = item ? parseFloat(item.dataset.preco || 0) : 0;
-    let pCordao = cordao ? parseFloat(cordao.dataset.preco || 0) : 0;
-    let pIlhos = temIlhos ? parseFloat(database.valoresAcabamento.ilhos || 0) : 0;
-    let pFuro = temFuro ? parseFloat(database.valoresAcabamento.furoLaco || 0) : 0;
-    let pCores = parseFloat(database.valoresAcabamento.cores[cor] || 0);
+    let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
+    let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
+    
+    let precoIlhos = 0;
+    if (temIlhos && database.valoresAcabamento) {
+        precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
+    }
+    
+    let precoFuroLaco = 0;
+    if (temFuroLaco && database.valoresAcabamento) {
+        precoFuroLaco = parseFloat(database.valoresAcabamento.furoLaco || 0);
+    }
+    
+    let precoCoresFixo = 0;
+    if (database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+        precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
+    }
 
-    let unitarioCru = pBase + pIlhos + pCordao + pFuro;
-    let subtotalLote = unitarioCru * qtd;
-    let totalLoteCru = subtotalLote + pCores;
+    // FORMULAÇÃO SOLICITADA: ((Produto + Ilhós + Alça + Furo) * Quantidade + Cores) + 70%
+    let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
+    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
+    let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
     
-    if (qtd > 2000) { totalLoteCru += (Math.ceil((qtd - 2000) / 1000) * 50.00); }
+    if (qtd > 2000) {
+        let unidadesExcedentes = qtd - 2000;
+        let blocosDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        custoTotalAntesDoLucro += (blocosDeMil * 50.00);
+    }
     
-    let totalComMargem = totalLoteCru * 1.70;
-    return { custoUnitario: totalComMargem / qtd, qtd, total: totalComMargem, itemSelecionado: item, cordaoSelecionado: cordao, corSelecionada: cor, temFuroLaco: temFuro, temIlhos };
+    let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
+    let precoUnitarioDeVenda = totalLoteComMargem / qtd;
+    
+    return { custoUnitario: precoUnitarioDeVenda, qtd, total: totalLoteComMargem, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
+}
+
+function obtenerNumeroIdentificador() {
+    const campoNum = document.getElementById("numOrcamento").value.trim();
+    if(campoNum) return campoNum;
+    
+    const d = new Date();
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate())+ String(d.getMilliseconds()).substring(0,2);
 }
 
 function gerarVisualizacaoTela() {
-    const n = document.getElementById("nomeCliente").value.trim(); const t = document.getElementById("telCliente").value.trim();
-    if(!n || !t) { alert("Nome e Telefone são obrigatórios!"); return; }
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const tel = document.getElementById("telCliente").value.trim();
+    if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
     
-    const dados = calcularValoresAtuais();
-    const inputNum = document.getElementById("numOrcamento");
-    if (!inputNum.value.trim()) { inputNum.value = obterNumeroIdentificador(); }
+    const dadosComerciais = calcularValoresAtuais();
+    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
+    const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
+
+    const inputNumero = document.getElementById("numOrcamento");
+    if (!inputNumero.value.trim()) {
+        inputNumero.value = obterNumeroIdentificador();
+    }
     
-    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNum.value;
-    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${n} <br> <strong>Telefone:</strong> ${t}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dados.itemSelecionado ? dados.itemSelecionado.text : ''}<br><strong>Cores:</strong> ${dados.corSelecionada} | <strong>Ilhós:</strong> ${dados.temIlhos?'Sim':'Não'}<br><strong>Alça:</strong> ${dados.cordaoSelecionado?dados.cordaoSelecionado.text:''} | <strong>Furo:</strong> ${dados.temFuroLaco?'Sim':'Não'}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dados.qtd} un | <strong>Unitário:</strong> ${formatarMoeda(dados.custoUnitario)} <br> <strong>Total Lote: ${formatarMoeda(dados.total)}</strong>`;
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
+    document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
-    document.getElementById("area-orcamento").style.display = "block"; document.getElementById("bloco-resultado").style.display = "block";
+    document.getElementById("area-orcamento").style.display = "block";
+    document.getElementById("bloco-resultado").style.display = "block";
 }
 
-function obterNumeroIdentificador() { const d = new Date(); return d.getFullYear() + String(d.getMonth()+1
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    let words = text.split(' ');
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+            ctx.fillText(line, x, currentY);
+            line = words[n] + ' ';
+            currentY += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line, x, currentY);
+    return currentY + lineHeight;
+}
+
+function abrirImagemNovaAba() {
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const telFormulario = document.getElementById("telCliente").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
+    const dadosComerciais = calcularValoresAtuais();
+    const dataHoje = new Date();
+    const dataValidade = new Date();
+    dataValidade.setDate(dataHoje.getDate() + 10);
+    const canvas = document.getElementById("canvasEspelho");
+    const ctx = canvas.getContext("2d");
+    
+    canvas.width = 600; canvas.height = 800;
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    try {
+        let maxAlturaLogo = 50;
+        let larguraOriginal = objImgMinha.naturalWidth || objImgMinha.width || 150;
+        let alturaOriginal = objImgMinha.naturalHeight || objImgMinha.height || 55;
+        let proporcaoLogo = larguraOriginal / alturaOriginal; 
+        let larguraCalculada = maxAlturaLogo * proporcaoLogo; 
+        if(larguraCalculada > 220) { larguraCalculada = 220; maxAlturaLogo = larguraCalculada / proporcaoLogo; }
+        ctx.drawImage(objImgMinha, 35, 30, larguraCalculada, maxAlturaLogo); 
+    } catch(e){}
+
+    const numeroFinal = obterNumeroIdentificador();
+    ctx.fillStyle = "#333333"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
+    ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60); ctx.textAlign = "left";
+
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
+    desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
+    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
+    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
+    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
+    
+    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
+    let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
+    let partes = detalhesTexto.split(" | ");
+    ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
+    if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
+    ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
+    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
+    ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
+    ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
+    
+    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    
+    ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
+    let startY = 495; const maxTextWidth = 510; const lineSpacing = 16;
+    startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
+    wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
+    
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
+
+    const novaAba = window.open("", "_blank");
+    if (novaAba) {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
+        const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
+        const telefoneLimpo = telFormulario.replace(/\D/g, "");
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
+
+        novaAba.document.write(`
+            <html>
+            <head>
+                <title>Exportar Orçamento</title>
+                <style>
+                    body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
+                    img { max-width:95%; max-height:80vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
+                    .btn-container { width: 100%; display: flex; justify-content: center; gap: 15px; }
+                    .btn-download { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+                    .btn-whatsapp { background: #25D366; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+                </style>
+            </head>
+            <body>
+                <img src="${dataUrl}" />
+                <div class="btn-container">
+                    <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
+                    <a href="https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                </div>
+            </body>
+            </html>
+        `);
+        novaAba.document.close();
+    }
+}
+
+function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
+    ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
+    ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+}
+</script>
+</body>
+</html>

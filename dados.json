@@ -4,19 +4,19 @@
       "id": 2,
       "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 0.78
+      "precoBase": 390
     },
     {
       "id": 6,
       "nomeCompleto": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 0.64
+      "precoBase": 640
     },
     {
       "id": 7,
       "nomeCompleto": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
       "detalhes": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
-      "precoBase": 0.57
+      "precoBase": 1140
     },
     {
       "id": 5,
@@ -40,29 +40,32 @@
   "cordoes": [
     {
       "nome": "Nylon",
-      "preco": 0.4
+      "preco": 0.3
     },
     {
       "nome": "Gorgurão",
-      "preco": 0.6
+      "preco": 0.8
     }
   ],
   "quantidades": [
     500,
     1000,
+    1500,
     2000,
     3000,
+    3500,
     4000,
+    4500,
     5000
   ],
   "valoresAcabamento": {
     "ilhos": 0.2,
-    "furoLaco": 0.1,
+    "furoLaco": 0.15,
     "cores": {
-      "1x0": 630,
-      "2x0": 660,
-      "4x0": 720,
-      "4x1": 750
+      "1x0": 0,
+      "2x0": 0.15,
+      "4x0": 0.4,
+      "4x1": 0.4
     }
   }
 }

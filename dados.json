@@ -1,28 +1,40 @@
 {
   "produtosConfigurados": [
     {
-      "id": 1,
-      "nomeCompleto": "Sacola 17x18x8 - Offset 150g",
-      "detalhes": "Sem Revestimento",
-      "precoBase": 3
-    },
-    {
       "id": 2,
-      "nomeCompleto": "Sacola 17x18x8 - Offset 180g",
-      "detalhes": "Sem Revestimento",
-      "precoBase": 3.2
+      "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "detalhes": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "precoBase": 390
     },
     {
-      "id": 3,
-      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g",
-      "detalhes": "Plasificada",
-      "precoBase": 3
+      "id": 6,
+      "nomeCompleto": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "detalhes": "1000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "precoBase": 640
+    },
+    {
+      "id": 7,
+      "nomeCompleto": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "detalhes": "2000 Sacolas 17x18x8 - Offset 180g - sem revestimento",
+      "precoBase": 1140
+    },
+    {
+      "id": 5,
+      "nomeCompleto": "Sacola 17x18x8 - Offset 180g + Hot Stamping",
+      "detalhes": "Sacola 17x18x8 - Offset 180g + Hot Stamping",
+      "precoBase": 4
     },
     {
       "id": 4,
-      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g",
+      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g - sem revestimento",
       "detalhes": "Sem Revestimento",
-      "precoBase": 3.4
+      "precoBase": 3
+    },
+    {
+      "id": 3,
+      "nomeCompleto": "Sacola 17x18x8 - Duplex 190g + Hot Stamping",
+      "detalhes": "Plasificada",
+      "precoBase": 3.5
     }
   ],
   "cordoes": [
@@ -36,7 +48,6 @@
     }
   ],
   "quantidades": [
-    250,
     500,
     1000,
     1500,

@@ -206,38 +206,46 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    // 1. CORREÇÃO MATEMÁTICA: Soma estrita dos insumos físicos unitários forçando floats limpos
-    let custoUnitarioFisico = 0;
-    if (itemSelecionado) custoUnitarioFisico += parseFloat(itemSelecionado.dataset.preco || 0);
-    if (cordaoSelecionado) custoUnitarioFisico += parseFloat(cordaoSelecionado.dataset.preco || 0);
-    if (temFuroLaco && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.furoLaco || 0);
-    if (temIlhos && database.valoresAcabamento) custoUnitarioFisico += parseFloat(database.valoresAcabamento.ilhos || 0);
+    // 1. Captura e isolamento estrito de floats para evitar concatenação de texto
+    let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
+    let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
     
-    // 2. Multiplicação do custo físico unitário consolidado pela quantidade de sacolas
-    let subtotalFisicoLote = custoUnitarioFisico * qtd;
-    
-    // 3. Captura o valor fixo do setup de Cores do banco de dados
-    let custoFixoCores = 0;
-    if(database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
-        custoFixoCores = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
+    let precoIlhos = 0;
+    if (temIlhos && database.valoresAcabamento) {
+        precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
     }
     
-    // 4. Soma o subtotal das sacolas com o valor do campo cores
-    let custoTotalAntesDoLucro = subtotalFisicoLote + custoFixoCores;
+    let precoFuroLaco = 0;
+    if (temFuroLaco && database.valoresAcabamento) {
+        precoFuroLaco = parseFloat(database.valoresAcabamento.furoLaco || 0);
+    }
     
-    // 5. Aplica o acréscimo de escala comercial de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
-    let taxaExcedenteEscala = 0;
+    let precoCoresFixo = 0;
+    if (database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+        precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
+    }
+
+    // 2. FORMULAÇÃO MATEMÁTICA CORRIGIDA:
+    // (Produto Base + Ilhós + Cordão + Furo)
+    let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
+    
+    // Vezes a Quantidade Mínima escolhida
+    let subtotalTiragemFisica = suspicion = loss = somaInsumosFisicosUnitarios * qtd;
+    
+    // Mais o valor do campo Impressão / Cores
+    let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
+    
+    // Acréscimo escalonado de R$ 50,00 a cada bloco de 1000 excedente a 2000 un (Mantido das regras anteriores)
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
         let blocosDeMil = Math.ceil(unidadesExcedentes / 1000); 
-        taxaExcedenteEscala = blocosDeMil * 50.00;
+        custoTotalAntesDoLucro += (blocosDeMil * 50.00);
     }
-    custoTotalAntesDoLucro += taxaExcedenteEscala;
     
-    // 6. MODIFICAÇÃO GLOBAL: Aplica os 70% de margem sobre a somatória total final obtida
+    // Mais 70% de margem de lucro sobre o montante final obtido
     let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
     
-    // Divide o lote com lucro pela quantidade para obter o preço unitário médio de venda coerente
+    // Preço unitário final proporcional de venda
     let precoUnitarioDeVenda = totalLoteComMargem / qtd;
     
     return { custoUnitario: precoUnitarioDeVenda, qtd, total: totalLoteComMargem, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
@@ -346,7 +354,7 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     
-    ctx.fillText("Preço Unitário Média de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
     ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     

@@ -21,7 +21,6 @@
         
         input:focus, select:focus { border-color: #0056b3; }
         
-        /* Estilo para campos travados/apenas leitura */
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
@@ -110,7 +109,6 @@
     <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
 
     <div id="bloco-resultado" style="display: none;">
-        <!-- CAMPO NUMÉRICO CONFIGURADO COMO APENAS LEITURA (READONLY) -->
         <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
             <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
             <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
@@ -231,7 +229,6 @@ function gerarVisualizacaoTela() {
     const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
 
-    // Sempre gera a numeração automática estável se o campo estiver vazio
     const inputNumero = document.getElementById("numOrcamento");
     if (!inputNumero.value.trim()) {
         inputNumero.value = obterNumeroIdentificador();
@@ -246,6 +243,28 @@ function gerarVisualizacaoTela() {
     document.getElementById("bloco-resultado").style.display = "block";
 }
 
+// NOVA FUNÇÃO UTILITÁRIA: Quebra linhas automaticamente de acordo com uma largura máxima (maxWidth)
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    let words = text.split(' ');
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = ctx.measureText(testLine);
+        let testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, x, currentY);
+            line = words[n] + ' ';
+            currentY += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line, x, currentY);
+    return currentY + lineHeight; // Retorna a próxima posição Y utilizável
+}
+
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const telFormulario = document.getElementById("telCliente").value.trim();
@@ -256,7 +275,9 @@ function abrirImagemNovaAba() {
     dataValidade.setDate(dataHoje.getDate() + 10);
     const canvas = document.getElementById("canvasEspelho");
     const ctx = canvas.getContext("2d");
-    canvas.width = 600; canvas.height = 780;
+    
+    // Aumentamos levemente a altura do canvas para acomodar o texto com folga caso quebre linhas
+    canvas.width = 600; canvas.height = 800;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     try {
@@ -282,7 +303,7 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
-    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
+    desenharCaixaPdf(ctx, 35, 235, 530, 105, "Specifications Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
     let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
@@ -296,15 +317,23 @@ function abrirImagemNovaAba() {
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
-    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 115); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 115);
+    
+    // CORREÇÃO VISUAL: Renderização controlada das observações em bloco com quebra dinâmica de linha
+    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    
     ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
-    ctx.fillText("• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, 495);
-    ctx.fillText("• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, 515);
-    ctx.fillText("• Prazo de Production: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, 535);
-    ctx.fillText("• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, 555);
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 595);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 615); ctx.lineTo(565, 615); ctx.stroke();
+    letstartY = 495;
+    const maxTextWidth = 510; // 530px da caixa menos as margens internas de 10px em cada lado
+    const lineSpacing = 16;
+
+    startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
+    wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
+    
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
 
     const novaAba = window.open("", "_blank");
     if (novaAba) {

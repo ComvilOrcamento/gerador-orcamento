@@ -189,6 +189,11 @@ function carregarMenusUnificados() {
     });
 }
 
+// CORREÇÃO: Função auxiliar para formatar em Real Brasileiro (R$)
+function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 function calcularValoresAtuais() {
     const prodSel = document.getElementById("selectProdutoConfigurado");
     const itemSelecionado = prodSel.options[prodSel.selectedIndex];
@@ -207,6 +212,9 @@ function calcularValoresAtuais() {
     }
     if(temFuroLaco && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.furoLaco || 0);
     if(temIlhos && database.valoresAcabamento) custoUnitario += parseFloat(database.valoresAcabamento.ilhos || 0);
+    
+    // CORREÇÃO: Aplica a margem adicional de 70% sobre o custo base calculado (Custo * 1.70)
+    custoUnitario = custoUnitario * 1.70;
     
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     return { custoUnitario, qtd, total: custoUnitario * qtd, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
@@ -237,7 +245,9 @@ function gerarVisualizacaoTela() {
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> R$ ${dadosComerciais.custoUnitario.toFixed(2)} <br> <strong>Total: R$ ${dadosComerciais.total.toFixed(2)}</strong>`;
+    
+    // CORREÇÃO VISUAL DA TELA: Exibe formatado em R$ com a margem inclusa
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
@@ -313,8 +323,12 @@ function abrirImagemNovaAba() {
     ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); ctx.fillText("Preço Unitário Calculado: R$ " + dadosComerciais.custoUnitario.toFixed(2), 50, 415);
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; ctx.fillText("TOTAL DA PROPOSTA: R$ " + dadosComerciais.total.toFixed(2), 550, 410);
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
+    
+    // CORREÇÃO VISUAL DO CANVAS: Aplica a string em formato nacional R$ na montagem gráfica
+    ctx.fillText("Preço Unitário Calculado: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
+    ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     
     ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);

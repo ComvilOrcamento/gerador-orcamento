@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
-    
-    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
-    <script src="https://cloudflare.com"></script>
-    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -17,20 +13,19 @@
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
         .field { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
         
         input:focus, select:focus { border-color: #0056b3; }
-        
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
         .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
-        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; height: 42px; }
         .btn-exportar:hover { background: #004085; }
         
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; color: #333; border-radius: 6px; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
@@ -110,7 +105,7 @@
             <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
         </div>
 
-        <div id="area-orcamento">
+        <div id="area-orcamento" style="display: none;">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
                 <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
@@ -162,7 +157,6 @@ const bancoReserva = {
 };
 
 window.onload = function() {
-    // Sincroniza e puxa as modificações de ordem e quantidade salvas no admin
     const cacheAdmin = localStorage.getItem('comvil_catalogo_cache');
     if (cacheAdmin) {
         database = JSON.parse(cacheAdmin);
@@ -185,7 +179,7 @@ function carregarMenusUnificados() {
     produtoSel.innerHTML = '';
     database.produtosConfigurados.forEach((prod) => {
         let opt = new Option(prod.nomeCompleto, prod.id);
-        opt.dataset.detalhes = prod.detalhes;
+        opt.dataset.detalhes = prod.detalhes || prod.nomeCompleto;
         opt.dataset.preco = prod.precoBase;
         produtoSel.add(opt);
     });
@@ -220,7 +214,6 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    // Captura estrita convertendo elementos em Floats matemáticos limpos
     let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
     let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
     
@@ -239,30 +232,30 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // NOVA REGRA MATEMÁTICA ESTRUTURADA:
-    // Passo 1: Produto + Ilhós + Alça + Furo
+    // REGRA MATEMÁTICA INTERNA REVISADA
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
-    
-    // Passo 2: O resultado anterior multiplicado pela Quantidade Mínima escolhida
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
-    
-    // Passo 3: O resultado anterior somado com o valor de Impressão / Cores
     let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
     
-    // Acréscimo industrial escalonado padrão de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
-        let blocosDeMil = Math.ceil(unidadesExcedentes / 1000); 
-        custoTotalAntesDoLucro += (blocosDeMil * 50.00);
+        let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        custoTotalAntesDoLucro += (blocksDeMil * 50.00);
     }
     
-    // Passo 4: O montante total final do lote acrescido de 70% de margem global de lucro
     let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
-    
-    // Divide o valor global do lote pela tiragem para obter a fração do preço unitário de venda
     let precoUnitarioDeVenda = totalLoteComMargem / qtd;
     
-    return { custoUnitario: precoUnitarioDeVenda, qtd, total: totalLoteComMargem, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
+    return { 
+        custoUnitario: precoUnitarioDeVenda, 
+        qtd, 
+        total: totalLoteComMargem, 
+        itemSelecionado, 
+        cordaoSelecionado, 
+        corSelecionada, 
+        temFuroLaco, 
+        temIlhos 
+    };
 }
 
 function obterNumeroIdentificador() {
@@ -286,7 +279,7 @@ function gerarVisualizacaoTela() {
     if (!inputNumero.value.trim()) {
         inputNumero.value = obterNumeroIdentificador();
     }
-    
+
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
@@ -348,7 +341,6 @@ function abrirImagemNovaAba() {
     ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60);
 
     ctx.textAlign = "left";
-
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
@@ -394,7 +386,7 @@ function abrirImagemNovaAba() {
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
         
-        const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento gerado pelo sistema corporativo da Comvil Embalagens.");
 
         novaAba.document.write(`
             <html>
@@ -414,7 +406,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="https://whatsapp.com` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

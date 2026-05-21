@@ -309,7 +309,7 @@ function abrirImagemNovaAba() {
         const textoInjetado = encodeURIComponent(`Olá, segue o orçamento solicitado Att ${vendedor ? vendedor.trim() : "Comvil Brindes"}.`);
         novaAba.document.write(`
             <html><head><title>Exportar Orçamento</title><style>body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial; padding: 20px 0; } img { max-width:95%; max-height:85vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; } .btn-container { display: flex; gap: 15px; } .btn-download, .btn-whatsapp { color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); } .btn-download { background: #0056b3; } .btn-whatsapp { background: #25D366; }</style></head>
-            <body><img src="${dataUrl}" /><div class="btn-container"><a href="${dataUrl}" download="Orcamento_${numeroFinal}.jpg" class="btn-download">Baixar Imagem</a><a href="https://api.whatsapp.com/send?phone=55&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a></div></body></html>
+            <body><img src="${dataUrl}" /><div class="btn-container"><a href="${dataUrl}" download="Orcamento_${numeroFinal}.jpg" class="btn-download">Baixar Imagem</a><a href="https://api.whatsapp.com/send?phone=55{telefoneClientePuro}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a></div></body></html>
         `);
         novaAba.document.close();
     }

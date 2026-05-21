@@ -31,8 +31,6 @@
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
         .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
         .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
-        
-        .rodape-contato-preview { margin-top: 15px; border: 1px solid #dddddd; padding: 12px; border-radius: 6px; background-color: #fafafa; text-align: center; font-size: 11px; color: #555555; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -94,21 +92,19 @@
         <select id="qtd"></select>
     </div>
 
-    <h2>Dados de Atendimento</h2>
-    <div class="row">
-        <div class="field">
-            <label>Nome do Vendedor</label>
-            <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
-        </div>
-        <div class="field">
-            <label>Telefone do Vendedor</label>
-            <input type="text" id="telVendedor" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" maxlength="15">
-        </div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Nome do vendedor</label>
+        <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
     </div>
 
     <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
 
     <div id="bloco-resultado" style="display: none;">
+        <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
+            <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
+            <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
+        </div>
+
         <div id="area-orcamento">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
@@ -118,8 +114,6 @@
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
-            
-            <div class="rodape-contato-preview" id="preview-contato-rodape"></div>
         </div>
         <canvas id="canvasEspelho" style="display:none;"></canvas>
         
@@ -130,14 +124,13 @@
 </div>
 
 <script>
+// SUBSTITUIÇÃO POR SÍMBOLOS E ARRAYS VAZIOS (SEM VALORES EMBUTIDOS NO CODIGO FONTE)
 let database = { 
     produtosConfigurados: [], 
     cordoes: [], 
     quantidades: [], 
     valoresAcabamento: null 
 };
-
-let numeroOrcamentoAtualInstancia = "";
 
 let objImgMinha = new Image();
 objImgMinha.src = "logo-empresa.png";
@@ -159,63 +152,53 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
-const bancoReserva = {
-  "produtosConfigurados": [
-    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
-    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
-  ],
-  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000],
-  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
-};
-
 window.onload = function() {
-    fetch('dados.json?t=' + new Date().getTime())
+    // COMANDO FORÇADO: Ignora completamente o cache local e faz a requisição crua ao dados.json físico
+    fetch('dados.json?t=' + new Date().getTime()) // Anti-cache via timestamp
         .then(response => {
-            if (!response.ok) throw new Error("Falha ao abrir o dados.json");
+            if (!response.ok) throw new Error("Erro ao ler dados.json");
             return response.json();
         })
         .then(data => { 
             database = data; 
-            if(database.logoEmpresa && database.logoEmpresa.trim() !== "") {
-                objImgMinha.src = database.logoEmpresa;
-                document.getElementById('img-minha-preview').src = database.logoEmpresa;
-            }
             carregarMenusUnificados(); 
         })
         .catch(err => { 
-            console.warn("Utilizando banco reserva integrado.");
-            database = JSON.parse(JSON.stringify(bancoReserva));
-            carregarMenusUnificados(); 
+            console.error(err);
+            alert("Erro crítico: O arquivo 'dados.json' não foi encontrado ou está com formatação incorreta. Verifique o servidor."); 
         });
 };
 
 function carregarMenusUnificados() {
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
-    if(database.produtosConfigurados) {
+    
+    if (database.produtosConfigurados && database.produtosConfigurados.length > 0) {
         database.produtosConfigurados.forEach((prod) => {
             let opt = document.createElement("option");
             opt.value = prod.id;
             opt.text = prod.nomeCompleto; 
+            opt.setAttribute('data-detalhes', prod.nomeCompleto);
+            opt.setAttribute('data-preco', prod.precoBase);
             produtoSel.add(opt);
         });
     }
 
     const cordaoSel = document.getElementById("selectCordao");
     cordaoSel.innerHTML = '';
-    if(database.cordoes) {
+    if (database.cordoes && database.cordoes.length > 0) {
         database.cordoes.forEach((c) => {
             let opt = document.createElement("option");
             opt.value = c.nome;
             opt.text = c.nome; 
+            opt.setAttribute('data-preco', c.preco);
             cordaoSel.add(opt);
         });
     }
 
     const qtdSel = document.getElementById("qtd");
     qtdSel.innerHTML = '';
-    if(database.quantidades) {
+    if (database.quantidades && database.quantidades.length > 0) {
         database.quantidades.forEach((q) => {
             let opt = new Option(q + " un", q);
             qtdSel.add(opt);
@@ -228,19 +211,18 @@ function formatarMoeda(valor) {
 }
 
 function calcularValoresAtuais() {
-    const idProdutoSelected = parseInt(document.getElementById("selectProdutoConfigurado").value);
-    const nomeCordaoSelected = document.getElementById("selectCordao").value;
+    const prodSel = document.getElementById("selectProdutoConfigurado");
+    const itemSelecionado = prodSel.options[prodSel.selectedIndex];
+    const cordaoSel = document.getElementById("selectCordao");
+    const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
+    
     const corSelecionada = document.getElementById("selectCores").value;
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected);
-    let precoProdutoBase = produtoEncontrado ? parseFloat(produtoEncontrado.precoBase || 0) : 0;
-    let detalhesBase = produtoEncontrado ? produtoEncontrado.nomeCompleto : 'Nenhum produto';
-    
-    let cordaoEncontrado = database.cordoes.find(c => c.nome === nomeCordaoSelected);
-    let precoCordaoAlca = cordaoEncontrado ? parseFloat(cordaoEncontrado.preco || 0) : 0;
+    let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.getAttribute('data-preco') || 0) : 0;
+    let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.getAttribute('data-preco') || 0) : 0;
     
     let precoIlhos = 0;
     if (temIlhos && database.valoresAcabamento) {
@@ -257,6 +239,7 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
+    // OPERAÇÃO ARITMÉTICA DO LOTADO REAL EXATO:
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
@@ -267,15 +250,14 @@ function calcularValoresAtuais() {
         custoTotalFinalDoLote += (blocksDeMil * 50.00);
     }
     
-    let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70;
-    let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
+    let precoUnitarioDeVenda = custoTotalFinalDoLote / qtd;
     
     return { 
         custoUnitario: precoUnitarioDeVenda, 
         qtd, 
-        total: totalLoteComMargemLucro, 
-        detalhesBase, 
-        nomeCordao: nomeCordaoSelected, 
+        total: custoTotalFinalDoLote, 
+        itemSelecionado, 
+        cordaoSelecionado, 
         corSelecionada, 
         temFuroLaco, 
         temIlhos 
@@ -283,10 +265,11 @@ function calcularValoresAtuais() {
 }
 
 function obterNumeroIdentificador() {
-    if(numeroOrcamentoAtualInstancia) return numeroOrcamentoAtualInstancia;
+    const campoNum = document.getElementById("numOrcamento").value.trim();
+    if(campoNum) return campoNum;
+    
     const d = new Date();
-    numeroOrcamentoAtualInstancia = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
-    return numeroOrcamentoAtualInstancia;
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
 }
 
 function gerarVisualizacaoTela() {
@@ -295,18 +278,19 @@ function gerarVisualizacaoTela() {
     if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
-    const telVendedor = document.getElementById("telVendedor").value.trim();
+    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : 'Nenhum produto';
+    const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
 
-    const numeroFinal = obterNumeroIdentificador();
-    document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
+    const inputNumero = document.getElementById("numOrcamento");
+    if (!inputNumero.value.trim()) {
+        inputNumero.value = obterNumeroIdentificador();
+    }
 
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
-    let textoContatoVendedor = telVendedor ? ` | 📞 Vendedor: ${telVendedor}` : '';
-    document.getElementById("preview-contato-rodape").innerHTML = `<strong>COMVIL BRINDES</strong><br>CNPJ: 36.206.286/0001-03 | ✉️ comvil@comvil.com.br<br>☎️ Fixo: 11 3461-0813 | 📱 WhatsApp: 11 97024-3064${textoContatoVendedor}`;
-
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
 }
@@ -335,8 +319,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const telFormulario = document.getElementById("telCliente").value.trim();
-    const vendedor = document.getElementById("nomeVendedor").value.trim();
-    const telVendedor = document.getElementById("telVendedor").value.trim();
+    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
     const dataValidade = new Date();
@@ -344,7 +327,7 @@ function abrirImagemNovaAba() {
     const canvas = document.getElementById("canvasEspelho");
     const ctx = canvas.getContext("2d");
     
-    canvas.width = 600; canvas.height = 860;
+    canvas.width = 600; canvas.height = 800;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     try {
@@ -372,12 +355,13 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
-    let detalhesTexto = dadosComerciais.detalhesBase;
+    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : '';
+    let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
     let partes = detalhesTexto.split(" | ");
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
     if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
@@ -399,34 +383,15 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    let nomeAssinaturaVendedor = vendedor || 'Equipe Comercial Comvil';
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + nomeAssinaturaVendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
-    
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + seller || vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
-    
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center";
-    ctx.fillText("COMVIL BRINDES", 300, 665);
-    
-    ctx.fillStyle = "#555555"; ctx.font = "10px Arial";
-    ctx.fillText("CNPJ: 36.206.286/0001-03  |  ✉️ comvil@comvil.com.br", 300, 685);
-    
-    let stringTelefones = "☎️ Fixo: 11 3461-0813  |  📱 WhatsApp: 11 97024-3064";
-    if (telVendedor) {
-        stringTelefones += `  |  📞 Vendedor: ${telVendedor}`;
-    }
-    ctx.fillText(stringTelefones, 300, 703);
 
     const novaAba = window.open("", "_blank");
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
-        
-        // CORREÇÃO ESTRITA E BLINDADA: Filtra apenas dígitos numéricos do formulário de telefone do cliente
-        const telefoneClientePuro = telFormulario.replace(/\D/g, "");
-        
-        let assinaturaMensagem = vendedor ? vendedor.trim() : "Comvil Brindes";
-        const msgTextoFormatado = `Olá, segue o orçamento solicitado Att ${assinaturaMensagem}.`;
-        const textoInjetado = encodeURIComponent(msgTextoFormatado);
+        const telefoneLimpo = telFormulario.replace(/\D/g, "");
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento gerado pelo sistema corporativo da Comvil Embalagens.");
 
         novaAba.document.write(`
             <html>
@@ -434,7 +399,7 @@ function abrirImagemNovaAba() {
                 <title>Exportar Orçamento</title>
                 <style>
                     body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
-                    img { max-width:95%; max-height:85vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
+                    img { max-width:95%; max-height:80vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
                     .btn-container { width: 100%; display: flex; justify-content: center; gap: 15px; }
                     .btn-download { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
                     .btn-download:hover { background: #004085; }
@@ -446,8 +411,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <!-- REVISADO: Injeção exata e concatenada sem espaços do número do cliente na API -->
-                    <a href="https://api.whatsapp.com/send?phone=55{telefoneClientePuro}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamentos Comercial</title>
+    
+    <!-- BIBLIOTECA PARA CONVERSÃO EXTREMAMENTE LEVE E SEGURA -->
+    <script src="https://cloudflare.com"></script>
+    
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
@@ -13,19 +17,20 @@
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
         .field { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; margin-bottom: 4px; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
         
         input:focus, select:focus { border-color: #0056b3; }
+        
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
         .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
-        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; height: 42px; }
+        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
         .btn-exportar:hover { background: #004085; }
         
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; color: #333; border-radius: 6px; display: none; }
+        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; display: none; color: #333; }
         .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
@@ -124,15 +129,9 @@
 </div>
 
 <script>
-// SUBSTITUIÇÃO POR SÍMBOLOS E ARRAYS VAZIOS (SEM VALORES EMBUTIDOS NO CODIGO FONTE)
-let database = { 
-    produtosConfigurados: [], 
-    cordoes: [], 
-    quantidades: [], 
-    valoresAcabamento: null 
-};
-
+let database = { produtosConfigurados: [], cordoes: [], quantidades: [], valoresAcabamento: {} };
 let objImgMinha = new Image();
+
 objImgMinha.src = "logo-empresa.png";
 objImgMinha.onerror = function() { objImgMinha.src = "https://placehold.co"; };
 
@@ -152,58 +151,59 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
+const bancoReserva = {
+  "produtosConfigurados": [
+    { "id": 1, "nomeCompleto": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "detalhes": "Sacola Duplex 240g - 25x35x10 - Plastificação Brilho", "precoBase": 4.00 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "detalhes": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
+  ],
+  "cordoes": [{ "nome": "Nylon", "preco": 0.30 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 0.0, "2x0": 0.15, "4x0": 0.4, "4x1": 0.4 } }
+};
+
 window.onload = function() {
-    // COMANDO FORÇADO: Ignora completamente o cache local e faz a requisição crua ao dados.json físico
-    fetch('dados.json?t=' + new Date().getTime()) // Anti-cache via timestamp
-        .then(response => {
-            if (!response.ok) throw new Error("Erro ao ler dados.json");
-            return response.json();
-        })
-        .then(data => { 
-            database = data; 
-            carregarMenusUnificados(); 
-        })
-        .catch(err => { 
-            console.error(err);
-            alert("Erro crítico: O arquivo 'dados.json' não foi encontrado ou está com formatação incorreta. Verifique o servidor."); 
-        });
+    // Sincroniza e puxa as modificações de ordem e quantidade salvas no admin
+    const cacheAdmin = localStorage.getItem('comvil_catalogo_cache');
+    if (cacheAdmin) {
+        database = JSON.parse(cacheAdmin);
+        if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
+        carregarMenusUnificados();
+    } else {
+        fetch('dados.json')
+            .then(response => response.json())
+            .then(data => { 
+                database = data; 
+                if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
+                carregarMenusUnificados(); 
+            })
+            .catch(() => { database = bancoReserva; carregarMenusUnificados(); });
+    }
 };
 
 function carregarMenusUnificados() {
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
-    
-    if (database.produtosConfigurados && database.produtosConfigurados.length > 0) {
-        database.produtosConfigurados.forEach((prod) => {
-            let opt = document.createElement("option");
-            opt.value = prod.id;
-            opt.text = prod.nomeCompleto; 
-            opt.setAttribute('data-detalhes', prod.nomeCompleto);
-            opt.setAttribute('data-preco', prod.precoBase);
-            produtoSel.add(opt);
-        });
-    }
+    database.produtosConfigurados.forEach((prod) => {
+        let opt = new Option(prod.nomeCompleto, prod.id);
+        opt.dataset.detalhes = prod.detalhes;
+        opt.dataset.preco = prod.precoBase;
+        produtoSel.add(opt);
+    });
 
     const cordaoSel = document.getElementById("selectCordao");
     cordaoSel.innerHTML = '';
-    if (database.cordoes && database.cordoes.length > 0) {
-        database.cordoes.forEach((c) => {
-            let opt = document.createElement("option");
-            opt.value = c.nome;
-            opt.text = c.nome; 
-            opt.setAttribute('data-preco', c.preco);
-            cordaoSel.add(opt);
-        });
-    }
+    database.cordoes.forEach((c) => {
+        let opt = new Option(c.nome, c.nome);
+        opt.dataset.preco = c.preco;
+        cordaoSel.add(opt);
+    });
 
     const qtdSel = document.getElementById("qtd");
     qtdSel.innerHTML = '';
-    if (database.quantidades && database.quantidades.length > 0) {
-        database.quantidades.forEach((q) => {
-            let opt = new Option(q + " un", q);
-            qtdSel.add(opt);
-        });
-    }
+    database.quantidades.forEach((q) => {
+        let opt = new Option(q + " un", q);
+        qtdSel.add(opt);
+    });
 }
 
 function formatarMoeda(valor) {
@@ -215,14 +215,14 @@ function calcularValoresAtuais() {
     const itemSelecionado = prodSel.options[prodSel.selectedIndex];
     const cordaoSel = document.getElementById("selectCordao");
     const cordaoSelecionado = cordaoSel.options[cordaoSel.selectedIndex];
-    
     const corSelecionada = document.getElementById("selectCores").value;
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.getAttribute('data-preco') || 0) : 0;
-    let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.getAttribute('data-preco') || 0) : 0;
+    // Captura estrita convertendo elementos em Floats matemáticos limpos
+    let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
+    let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
     
     let precoIlhos = 0;
     if (temIlhos && database.valoresAcabamento) {
@@ -235,33 +235,34 @@ function calcularValoresAtuais() {
     }
     
     let precoCoresFixo = 0;
-    if (database.valoresAcabamento && database.valoresAcabamento.cores) {
+    if (database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // OPERAÇÃO ARITMÉTICA DO LOTADO REAL EXATO:
+    // NOVA REGRA MATEMÁTICA ESTRUTURADA:
+    // Passo 1: Produto + Ilhós + Alça + Furo
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
-    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
-    let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
     
+    // Passo 2: O resultado anterior multiplicado pela Quantidade Mínima escolhida
+    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
+    
+    // Passo 3: O resultado anterior somado com o valor de Impressão / Cores
+    let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
+    
+    // Acréscimo industrial escalonado padrão de R$ 50,00 a cada bloco de 1000 excedente a 2000 un
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
-        let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
-        custoTotalFinalDoLote += (blocksDeMil * 50.00);
+        let blocosDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        custoTotalAntesDoLucro += (blocosDeMil * 50.00);
     }
     
-    let precoUnitarioDeVenda = custoTotalFinalDoLote / qtd;
+    // Passo 4: O montante total final do lote acrescido de 70% de margem global de lucro
+    let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
     
-    return { 
-        custoUnitario: precoUnitarioDeVenda, 
-        qtd, 
-        total: custoTotalFinalDoLote, 
-        itemSelecionado, 
-        cordaoSelecionado, 
-        corSelecionada, 
-        temFuroLaco, 
-        temIlhos 
-    };
+    // Divide o valor global do lote pela tiragem para obter a fração do preço unitário de venda
+    let precoUnitarioDeVenda = totalLoteComMargem / qtd;
+    
+    return { custoUnitario: precoUnitarioDeVenda, qtd, total: totalLoteComMargem, itemSelecionado, cordaoSelecionado, corSelecionada, temFuroLaco, temIlhos };
 }
 
 function obterNumeroIdentificador() {
@@ -278,14 +279,14 @@ function gerarVisualizacaoTela() {
     if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
-    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : 'Nenhum produto';
+    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
 
     const inputNumero = document.getElementById("numOrcamento");
     if (!inputNumero.value.trim()) {
         inputNumero.value = obterNumeroIdentificador();
     }
-
+    
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
@@ -347,6 +348,7 @@ function abrirImagemNovaAba() {
     ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60);
 
     ctx.textAlign = "left";
+
     ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
@@ -355,7 +357,7 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
-    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : '';
+    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
     let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
     let partes = detalhesTexto.split(" | ");
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
@@ -383,7 +385,7 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + seller || vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
 
     const novaAba = window.open("", "_blank");
@@ -391,7 +393,8 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
-        const textoInjetado = encodeURIComponent("Olá, segue o orçamento gerado pelo sistema corporativo da Comvil Embalagens.");
+        
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento. Atenciosamente, " + vendedor);
 
         novaAba.document.write(`
             <html>
@@ -411,7 +414,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="https://whatsapp.com{telefoneLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="https://whatsapp.com` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

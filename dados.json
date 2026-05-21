@@ -56,8 +56,8 @@
     5000
   ],
   "valoresAcabamento": {
-    "ilhos": 0.2,
-    "furoLaco": 0.1,
+    "ilhos": 0,
+    "furoLaco": 0,
     "cores": {
       "1x0": 480,
       "2x0": 510,

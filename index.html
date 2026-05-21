@@ -159,13 +159,14 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
+// CORREÇÃO DEFINITIVA VITALÍCIA: Removido o erro de sintaxe que corrompia e quebrava o script
 const bancoReserva = {
   "produtosConfigurados": [
     { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades":,
+  "quantidades": [500, 1000, 2000, 3000, 5000],
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -177,13 +178,10 @@ window.onload = function() {
         })
         .then(data => { 
             database = data; 
-            
-            // AUTOMACAO: Se o dados.json carregado do admin tiver uma imagem Base64 embutida, atualiza o topo
             if(database.logoEmpresa && database.logoEmpresa.trim() !== "") {
                 objImgMinha.src = database.logoEmpresa;
                 document.getElementById('img-minha-preview').src = database.logoEmpresa;
             }
-            
             carregarMenusUnificados(); 
         })
         .catch(err => { 
@@ -196,7 +194,7 @@ window.onload = function() {
 function carregarMenusUnificados() {
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
-    if(database.produtosConfigurados) {
+    if(database.produtosConfigurados && database.produtosConfigurados.length > 0) {
         database.produtosConfigurados.forEach((prod) => {
             let opt = document.createElement("option");
             opt.value = prod.id;
@@ -207,7 +205,7 @@ function carregarMenusUnificados() {
 
     const cordaoSel = document.getElementById("selectCordao");
     cordaoSel.innerHTML = '';
-    if(database.cordoes) {
+    if(database.cordoes && database.cordoes.length > 0) {
         database.cordoes.forEach((c) => {
             let opt = document.createElement("option");
             opt.value = c.nome;
@@ -218,7 +216,7 @@ function carregarMenusUnificados() {
 
     const qtdSel = document.getElementById("qtd");
     qtdSel.innerHTML = '';
-    if(database.quantidades) {
+    if(database.quantidades && database.quantidades.length > 0) {
         database.quantidades.forEach((q) => {
             let opt = new Option(q + " un", q);
             qtdSel.add(opt);
@@ -238,11 +236,12 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected);
+    // BLINDAGEM DA BUSCA COM VALOR DE BACKUP CASO COMENTADO
+    let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected) || database.produtosConfigurados[0];
     let precoProdutoBase = produtoEncontrado ? parseFloat(produtoEncontrado.precoBase || 0) : 0;
     let detalhesBase = produtoEncontrado ? produtoEncontrado.nomeCompleto : 'Nenhum produto';
     
-    let cordaoEncontrado = database.cordoes.find(c => c.nome === nomeCordaoSelected);
+    let cordaoEncontrado = database.cordoes.find(c => c.nome === nomeCordaoSelected) || database.cordoes[0];
     let precoCordaoAlca = cordaoEncontrado ? parseFloat(cordaoEncontrado.preco || 0) : 0;
     
     let precoIlhos = 0;
@@ -424,7 +423,6 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         
-        // MODIFICAÇÃO EXECUTADA: Coleta o número limpo direto do campo do formulário
         const telefoneClientePuro = telFormulario.replace(/\D/g, "");
         
         let assinaturaMensagem = vendedor ? vendedor.trim() : "Comvil Brindes";
@@ -458,17 +456,6 @@ function abrirImagemNovaAba() {
     }
 }
 
-function determinarCaixaPdf(ctx, x, y, w, h, titulo) {
-    desenharCaixaPdf(ctx, x, y, w, h, titulo);
-}
-
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
-    ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
-}
-</script>
-</body>
-</html>
+    

@@ -6,18 +6,8 @@
     <title>Gerador de Orçamentos Comercial</title>
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; flex-direction: column; align-items: center; }
-        
-        /* SISTEMA DE NAVEGAÇÃO POR ABAS */
-        .container-abas { width: 100%; max-width: 600px; display: flex; gap: 5px; margin-bottom: -1px; position: relative; z-index: 2; }
-        .aba-btn { padding: 12px 20px; background: #e2e8f0; border: 1px solid #cbd5e1; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: bold; color: #64748b; transition: all 0.2s; }
-        .aba-btn:hover { background: #cbd5e1; color: #334155; }
-        .aba-btn.active { background: white; border-color: #ccc; border-bottom: 1px solid white; color: #003366; padding-bottom: 13px; }
-        
-        .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 0 8px 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #ccc; position: relative; z-index: 1; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
+        body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
         h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
@@ -28,6 +18,13 @@
         input:focus, select:focus { border-color: #0056b3; }
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
+        /* ESTILOS DAS ABAS */
+        .tabs-menu { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .tab-link { padding: 10px 15px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; color: #64748b; font-size: 13px; }
+        .tab-link.active { background: #003366; color: white; border-color: #003366; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
@@ -47,14 +44,14 @@
 </head>
 <body>
 
-<!-- SELETOR DE ABAS DO SISTEMA (EXPANSÍVEL PARA NOVOS ITENS) -->
-<div class="container-abas">
-    <button class="aba-btn active" onclick="alternarAbasDoGerador(event, 'aba-sacolas')">Sacolas</button>
-    <button class="aba-btn" onclick="alternarAbasDoGerador(event, 'aba-mao-eva')">Mão de Torcida em E.V.A</button>
-</div>
-
 <div class="container">
     <h1>Novo Orçamento</h1>
+
+    <!-- MENU DE SELEÇÃO DE ABAS -->
+    <div class="tabs-menu">
+        <button class="tab-link active" onclick="mudarAba(event, 'aba-sacolas')">Sacolas</button>
+        <button class="tab-link" onclick="mudarAba(event, 'aba-mao')">Mão de Torcida em E.V.A</button>
+    </div>
 
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
@@ -66,8 +63,8 @@
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
     </div>
 
-    <!-- CONTEÚDO DA ABA 1: SACOLAS (MANTIDO TOTALMENTE INTACTO E SEM ALTERAÇÕES) -->
-    <div id="aba-sacolas" class="tab-content active">
+    <!-- CONTEÚDO DA ABA 1: SACOLAS -->
+    <div id="aba-sacolas" class="tab-pane active">
         <h2>Itens do orçamento (Sacolas)</h2>
         <div class="field" style="margin-bottom: 12px;">
             <label>Configuração do Produto Base *</label>
@@ -113,29 +110,32 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO DA ABA 2: MÃO DE TORCIDA EM E.V.A (NOVA E PARALELA) -->
-    <div id="aba-mao-eva" class="tab-content">
-        <h2>Itens do orçamento (Mão em E.V.A)</h2>
+    <!-- CONTEÚDO DA ABA 2: MÃO DE TORCIDA -->
+    <div id="aba-mao" class="tab-pane">
+        <h2>Itens do orçamento (Mão de Torcida)</h2>
+        <div class="field" style="margin-bottom: 12px;">
+            <label>Modelo Base *</label>
+            <select id="selectMaoModelo"></select>
+        </div>
+        
         <div class="row">
             <div class="field">
-                <label>Modelo *</label>
-                <select id="selectModeloEva">
+                <label>Tipo *</label>
+                <select id="selectMaoTipo">
                     <option value="Luva">Luva</option>
                     <option value="Argola">Argola</option>
                 </select>
             </div>
             <div class="field">
-                <label>Cores da Mão (E.V.A) *</label>
-                <select id="selectCoresMaoEva">
-                    <!-- Será preenchido via .json no futuro -->
-                    <option value="">Aguardando dados comerciais...</option>
-                </select>
+                <label>Cores de Gravação *</label>
+                <select id="selectMaoCores"></select>
             </div>
         </div>
+
         <div class="row">
             <div class="field">
-                <label>Quantidade Solicitada *</label>
-                <select id="selectQtdEva" onchange="verificarQuantidadeVariavelEva(this)">
+                <label>Selecione a Quantidade *</label>
+                <select id="selectMaoQtd" onchange="toggleQtdVariavelMao(this.value)">
                     <option value="100">100 un</option>
                     <option value="200">200 un</option>
                     <option value="300">300 un</option>
@@ -143,12 +143,12 @@
                     <option value="1000">1000 un</option>
                     <option value="2000">2000 un</option>
                     <option value="5000">5000 un</option>
-                    <option value="Variavel">Variável (Digitar quantidade)</option>
+                    <option value="variavel">Quantidade Variável</option>
                 </select>
             </div>
-            <div class="field" id="blocoQtdVariavelEva" style="display: none;">
-                <label>Inserir Quantidade Manual *</label>
-                <input type="number" id="inputQtdManualEva" min="1" placeholder="Ex: 750">
+            <div class="field" id="bloco-qtd-variavel-mao" style="display: none;">
+                <label>Digite a Quantidade Customizada</label>
+                <input type="number" id="inputMaoQtdVariavel" min="1" placeholder="Ex: 750">
             </div>
         </div>
     </div>
@@ -193,10 +193,11 @@ let database = {
     produtosConfigurados: [], 
     cordoes: [], 
     quantidades: [], 
-    valoresAcabamento: null 
+    valoresAcabamento: null,
+    maoModelos: [], // Chave preparada para o JSON da Mão de Torcida
+    maoCores: []    // Chave preparada para o JSON da Mão de Torcida
 };
 
-// Variável de controle para saber qual aba está sendo processada no orçamento atual
 let abaAtivaAtual = "aba-sacolas";
 let numeroOrcamentoAtualInstancia = "";
 
@@ -220,39 +221,28 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
-// FUNÇÃO DE TROCA DE ABAS
-function alternarAbasDoGerador(event, idAba) {
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.querySelectorAll('.aba-btn').forEach(btn => btn.classList.remove('active'));
-    
-    document.getElementById(idAba).classList.add('active');
-    event.target.classList.add('active');
-    
-    abaAtivaAtual = idAba;
-    
-    // Reseta a área de resultados anterior ao mudar de produto para evitar confusões
-    document.getElementById("bloco-resultado").style.display = "none";
-    document.getElementById("area-orcamento").style.display = "none";
+function mudarAba(e, tabId) {
+    document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    abaAtivaAtual = tabId;
 }
 
-// CONTROLE DO CAMPO DE QUANTIDADE VARIÁVEL DA NOVA ABA
-function verificarQuantidadeVariavelEva(select) {
-    const blocoManual = document.getElementById("blocoQtdVariavelEva");
-    if(select.value === "Variavel") {
-        blocoManual.style.display = "flex";
-    } else {
-        blocoManual.style.display = "none";
-    }
+function toggleQtdVariavelMao(valor) {
+    const bloco = document.getElementById("bloco-qtd-variavel-mao");
+    bloco.style.display = (valor === "variavel") ? "block" : "none";
 }
 
 const bancoReserva = {
   "produtosConfigurados": [
-    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
-    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
+    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 }
   ],
-  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }],
   "quantidades":,
-  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } },
+  "maoModelos": [{ "id": 1, "nome": "Mão de E.V.A Padrão 40cm", "precoBase": 2.50 }],
+  "maoCores": [{ "nome": "1 Cor / Silk", "preco": 0.30 }, { "nome": "2 Cores / Silk", "preco": 0.50 }]
 };
 
 window.onload = function() {
@@ -277,6 +267,7 @@ window.onload = function() {
 };
 
 function carregarMenusUnificados() {
+    // ABA SACOLAS
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
     if(database.produtosConfigurados) {
@@ -305,6 +296,29 @@ function carregarMenusUnificados() {
         database.quantidades.forEach((q) => {
             let opt = new Option(q + " un", q);
             qtdSel.add(opt);
+        });
+    }
+
+    // ABA MÃO DE TORCIDA
+    const maoModeloSel = document.getElementById("selectMaoModelo");
+    maoModeloSel.innerHTML = '';
+    if(database.maoModelos) {
+        database.maoModelos.forEach((m) => {
+            let opt = document.createElement("option");
+            opt.value = m.id;
+            opt.text = m.nome;
+            maoModeloSel.add(opt);
+        });
+    }
+
+    const maoCoresSel = document.getElementById("selectMaoCores");
+    maoCoresSel.innerHTML = '';
+    if(database.maoCores) {
+        database.maoCores.forEach((c) => {
+            let opt = document.createElement("option");
+            opt.value = c.nome;
+            opt.text = c.nome;
+            maoCoresSel.add(opt);
         });
     }
 }
@@ -358,29 +372,50 @@ function calcularValoresAtuais() {
         let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
         
         return { 
+            tipoItem: "sacola",
             custoUnitario: precoUnitarioDeVenda, 
             qtd, 
             total: totalLoteComMargemLucro, 
             detalhesBase, 
-            textoEspecificacoes: `<strong>Cores:</strong> ${corSelecionada} | <strong>Ilhós:</strong> ${temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordaoSelected} | <strong>Furo Laço:</strong> ${temFuroLaco ? 'Sim' : 'Não'}`
+            nomeCordao: nomeCordaoSelected, 
+            corSelecionada, 
+            temFuroLaco, 
+            temIlhos 
         };
     } else {
-        // ESPAÇO RESERVADO PARA OS CÁLCULOS FUTUROS DA MÃO DE EVA
-        const modeloEva = document.getElementById("selectModeloEva").value;
-        const corEva = document.getElementById("selectCoresMaoEva").value || "Padrão";
-        const qtdSelect = document.getElementById("selectQtdEva").value;
-        let qtdFinalEva = qtdSelect === "Variavel" ? parseInt(document.getElementById("inputQtdManualEva").value) || 100 : parseInt(qtdSelect);
+        // CÁLCULO ESTRUTURAL INICIAL PARA A ABA MÃO DE TORCIDA
+        const idMaoSelected = parseInt(document.getElementById("selectMaoModelo").value);
+        const tipoMao = document.getElementById("selectMaoTipo").value;
+        const corMao = document.getElementById("selectMaoCores").value;
         
-        // Estrutura simbólica provisória aguardando fórmulas
-        let valorSimbolicoLote = 500.00; 
-        let valorSimbolicoUnitario = valorSimbolicoLote / qtdFinalEva;
-        
+        const qtdSelect = document.getElementById("selectMaoQtd").value;
+        let qtd = 100;
+        if (qtdSelect === "variavel") {
+            qtd = parseInt(document.getElementById("inputMaoQtdVariavel").value) || 100;
+        } else {
+            qtd = parseInt(qtdSelect);
+        }
+
+        let maoEncontrada = database.maoModelos.find(m => m.id === idMaoSelected);
+        let detalhesBase = maoEncontrada ? maoEncontrada.nome : "Mão de E.V.A";
+        let precoBase = maoEncontrada ? parseFloat(maoEncontrada.precoBase || 0) : 0;
+
+        let corEncontrada = database.maoCores.find(c => c.nome === corMao);
+        let precoCor = corEncontrada ? parseFloat(corEncontrada.preco || 0) : 0;
+
+        // Fórmula temporária básica (Preço Base + Preço Cor) * Quantidade
+        let custoLote = (precoBase + precoCor) * qtd;
+        let totalMaoLucro = custoLote * 1.70; // Mantendo os 70% padrão corporativo
+        let unitarioMao = totalMaoLucro / qtd;
+
         return {
-            custoUnitario: valorSimbolicoUnitario,
-            qtd: qtdFinalEva,
-            total: valorSimbolicoLote,
-            detalhesBase: `Mão de Torcida em E.V.A - Modelo: ${modeloEva}`,
-            textoEspecificacoes: `<strong>Tipo:</strong> Mão de EVA (${modeloEva})<br><strong>Cor do E.V.A:</strong> ${corEva}`
+            tipoItem: "mao",
+            custoUnitario: unitarioMao,
+            qtd,
+            total: totalMaoLucro,
+            detalhesBase,
+            tipoMao,
+            corMao
         };
     }
 }
@@ -399,12 +434,17 @@ function gerarVisualizacaoTela() {
     
     const dadosComerciais = calcularValoresAtuais();
     const telVendedor = document.getElementById("telVendedor").value.trim();
-
     const numeroFinal = obterNumeroIdentificador();
+    
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
-
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.detalhesBase}<br>${dadosComerciais.textoEspecificacoes}`;
+    
+    if (dadosComerciais.tipoItem === "sacola") {
+        document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
+    } else {
+        document.getElementById("text-dados-produto").innerHTML = `<strong>Produto:</strong> ${dadosComerciais.detalhesBase}<br><strong>Tipo:</strong> ${dadosComerciais.tipoMao} <br><strong>Estampa:</strong> ${dadosComerciais.corMao}`;
+    }
+    
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     let textoContatoVendedor = telVendedor ? ` | 📞 Vendedor: ${telVendedor}` : '';
@@ -472,34 +512,24 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
+    
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
-    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
+    ctx.fillStyle = "#333333"; font = "bold 11px Arial";
     
-    let detalhesTexto = dadosComerciais.detalhesBase;
-    let partes = detalhesTexto.split(" | ");
-    ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
-    if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
-    
-    // Converte tags HTML para formato simples de texto limpo para o Canvas
-    let stringEspecificacoesLimpa = dadosComerciais.textoEspecificacoes.replace(/<\/?[^>]+(>|$)/g, "  |  ");
-    ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-    ctx.fillText("• " + stringEspecificacoesLimpa, 50, 338);
+    if (dadosComerciais.tipoItem === "sacola") {
+        ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
+        let partes = dadosComerciais.detalhesBase.split(" | ");
+        ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
+        if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
+        ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+        ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
+    } else {
+        ctx.fillText("Modelo de Mão selecionado:", 50, 270); ctx.font = "11px Arial";
+        ctx.fillText("• " + dadosComerciais.detalhesBase, 50, 290);
+        ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e estampa:", 50, 324); ctx.font = "11px Arial";
+        ctx.fillText("• Tipo estrutural: " + dadosComerciais.tipoMao + "  |  • Gravação: " + dadosComerciais.corMao, 50, 338);
+    }
     
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
-    
-    ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
-    ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
-    
-    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
-    
-    ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
-    let startY = 495;
-    const maxTextWidth = 510; 
-    const lineSpacing = 16;
-
-    startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);
-    startY = wrapText(ctx
+    ctx.fillText("

@@ -165,7 +165,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000],
+  "quantidades":,
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -335,8 +335,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const telFormulario = document.getElementById("telCliente").value.trim();
-    const nomeVendedorInput = document.getElementById("nomeVendedor").value.trim();
-    const vendedor = nomeVendedorInput || 'Equipe Comercial Comvil';
+    const vendedor = document.getElementById("nomeVendedor").value.trim();
     const telVendedor = document.getElementById("telVendedor").value.trim();
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
@@ -401,7 +400,8 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    let assinaturaVendedor = vendedor ? vendedor : 'Equipe Comercial Comvil';
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + assinaturaVendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
     
@@ -421,14 +421,12 @@ function abrirImagemNovaAba() {
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
-        const telefoneClienteLimpo = telFormulario.replace(/\D/g, "");
+        const pipelineTelefone = telFormulario.replace(/\D/g, "");
         
-        // MENSAGEM DINÂMICA COM ASSINATURA CONDICIONAL DO VENDEDOR
-        let assinaturaMensagem = nomeVendedorInput ? nomeVendedorInput : 'Comvil Brindes';
+        // CONSTRUÇÃO DINÂMICA DA ASSINATURA NA MENSAGEM AUTOMÁTICA
+        let assinaturaMensagem = vendedor ? vendedor : 'Comvil Brindes';
         const textoInjetado = encodeURIComponent("Olá, segue o orçamento solicitado Att " + assinaturaMensagem + ".");
-        
-        // LINK DO WHATSAPP CONSTRUTOR FIXO COM O PREFIXO REQUISITADO E O NÚMERO DO CLIENTE ACOPLADO NO FINAL
-        const urlWhatsAppDestino = "https://api.whatsapp.com/send?phone=55" + telefoneClienteLimpo + "&text=" + textoInjetado;
+        const linkCompletoWpp = "https://whatsapp.com" + pipelineTelefone + "&text=" + textoInjetado;
 
         novaAba.document.write(`
             <html>
@@ -448,7 +446,7 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="${urlWhatsAppDestino}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <a href="${linkCompletoWpp}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>
@@ -463,4 +461,7 @@ function determinarCaixaPdf(ctx, x, y, w, h, titulo) {
 
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd";
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
+    ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.

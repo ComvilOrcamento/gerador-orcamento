@@ -124,7 +124,6 @@
 </div>
 
 <script>
-// BASE VARIÁVEL SIMBÓLICA LIMPA
 let database = { 
     produtosConfigurados: [], 
     cordoes: [], 
@@ -153,7 +152,6 @@ function mascaraTelefone(input) {
 }
 
 window.onload = function() {
-    // REQUISIÇÃO FORÇADA DIRETA AO ARQUIVO DO SERVIDOR (CONTRA ERROS DE CACHE)
     fetch('dados.json?t=' + new Date().getTime())
         .then(response => {
             if (!response.ok) throw new Error("Falha ao abrir o dados.json");
@@ -176,7 +174,7 @@ function carregarMenusUnificados() {
         database.produtosConfigurados.forEach((prod) => {
             let opt = document.createElement("option");
             opt.value = prod.id;
-            opt.text = prod.nomeCompleto; // EXIBE APENAS A DESCRIÇÃO COMERCIAL (PREÇO SEGREDO OCULTO)
+            opt.text = prod.nomeCompleto; 
             opt.setAttribute('data-detalhes', prod.nomeCompleto);
             opt.setAttribute('data-preco', prod.precoBase);
             produtoSel.add(opt);
@@ -189,7 +187,7 @@ function carregarMenusUnificados() {
         database.cordoes.forEach((c) => {
             let opt = document.createElement("option");
             opt.value = c.nome;
-            opt.text = c.nome; // EXIBE APENAS O NOME DO MATERIAL (PREÇO SEGREDO OCULTO)
+            opt.text = c.nome; 
             opt.setAttribute('data-preco', c.preco);
             cordaoSel.add(opt);
         });
@@ -238,7 +236,7 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // OPERAÇÃO MATEMÁTICA LÍMPIDA REVISADA (FIXO DE COR SOMADO SEM MULTIPLICAÇÃO)
+    // REGRA MATEMÁTICA COM ADIÇÃO DE 70% DE MARGEM CORPORATIVA NO TOTAL
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
@@ -249,12 +247,14 @@ function calcularValoresAtuais() {
         custoTotalFinalDoLote += (blocksDeMil * 50.00);
     }
     
-    let precoUnitarioDeVenda = custoTotalFinalDoLote / qtd;
+    // APLICAÇÃO DE MARGEM DE 70% SOBRE O MONTANTE BRUTO DO PEDIDO (LUCRO EMPRESARIAL)
+    let totalLoteComMargem Lucro = custoTotalFinalDoLote * 1.70;
+    let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
     return { 
         custoUnitario: precoUnitarioDeVenda, 
         qtd, 
-        total: custoTotalFinalDoLote, 
+        total: totalLoteComMargemLucro, 
         itemSelecionado, 
         cordaoSelecionado, 
         corSelecionada, 

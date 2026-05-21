@@ -88,6 +88,11 @@
     </div>
 
     <div class="field" style="margin-bottom: 12px;">
+        <label>Quantidade Solicitada *</label>
+        <input type="number" id="qtd" value="1000" min="1" placeholder="Ex: 1000">
+    </div>
+
+    <div class="field" style="margin-bottom: 12px;">
         <label>Nome do vendedor</label>
         <input type="text" id="nomeVendedor" placeholder="Seu nome (Opcional)">
     </div>
@@ -196,9 +201,7 @@ function calcularValoresAtuais() {
     const corSelecionada = document.getElementById("selectCores").value;
     const temIlhos = document.getElementById("selectIlhos").value === "Sim";
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
-    
-    // QUANTIDADE FIXADA RIGOROSAMENTE EM 1 UNIDADE
-    const qtd = 1;
+    const qtd = parseInt(document.getElementById("qtd").value) || 1;
     
     let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
     let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
@@ -218,12 +221,21 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA SIMPLIFICADA PARA UNIDADE PURE
+    // REGRA MATEMÁTICA REAL SEM MARGEM GLOBAL
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
-    let custoTotalFinalDoLote = somaInsumosFisicosUnitarios + precoCoresFixo;
+    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
+    let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
+    
+    if (qtd > 2000) {
+        let unidadesExcedentes = qtd - 2000;
+        let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        custoTotalFinalDoLote += (blocksDeMil * 50.00);
+    }
+    
+    let precoUnitarioDeVenda = custoTotalFinalDoLote / qtd;
     
     return { 
-        custoUnitario: custoTotalFinalDoLote, 
+        custoUnitario: precoUnitarioDeVenda, 
         qtd, 
         total: custoTotalFinalDoLote, 
         itemSelecionado, 
@@ -245,8 +257,10 @@ function obterNumeroIdentificador() {
 function gerarVisualizacaoTela() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const tel = document.getElementById("telCliente").value.trim();
+    const qtdVal = parseInt(document.getElementById("qtd").value);
 
     if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
+    if(isNaN(qtdVal) || qtdVal <= 0) { alert("Erro: Digite uma quantidade válida maior que zero!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
     const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.text : 'Nenhum produto';
@@ -260,7 +274,7 @@ function gerarVisualizacaoTela() {
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Valor da Proposta: ${formatarMoeda(dadosComerciais.total)}</strong>`;
+    document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     document.getElementById("area-orcamento").style.display = "block";
     document.getElementById("bloco-resultado").style.display = "block";
@@ -298,7 +312,7 @@ function abrirImagemNovaAba() {
     const canvas = document.getElementById("canvasEspelho");
     const ctx = canvas.getContext("2d");
     
-    canvas.width = 600; canvas.height = 750;
+    canvas.width = 600; canvas.height = 800;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     try {
@@ -335,8 +349,9 @@ function abrirImagemNovaAba() {
     ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Proposta comercial com base nas especificações selecionadas acima.", 50, 405); 
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     
+    ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
     ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     
@@ -361,6 +376,7 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
+        
         const textoInjetado = encodeURIComponent("Olá, segue o orçamento gerado pelo sistema corporativo da Comvil Embalagens.");
 
         novaAba.document.write(`

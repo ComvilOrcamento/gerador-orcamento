@@ -159,14 +159,13 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
-// CORREÇÃO: Removido o erro de sintaxe estrutural (vírgula órfã) na chave de quantidades
 const bancoReserva = {
   "produtosConfigurados": [
     { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000],
+  "quantidades": [500, 1000, 2000, 3000],
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -306,7 +305,6 @@ function gerarVisualizacaoTela() {
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     let textoContatoVendedor = telVendedor ? ` | 📞 Vendedor: ${telVendedor}` : '';
-    // ATUALIZAÇÃO: Injeção do novo CNPJ no rodapé da visualização da tela
     document.getElementById("preview-contato-rodape").innerHTML = `<strong>COMVIL BRINDES</strong><br>CNPJ: 36.206.286/0001-03 | ✉️ comvil@comvil.com.br<br>☎️ Fixo: 11 3461-0813 | 📱 WhatsApp: 11 97024-3064${textoContatoVendedor}`;
 
     document.getElementById("area-orcamento").style.display = "block";
@@ -337,7 +335,8 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 function abrirImagemNovaAba() {
     const nome = document.getElementById("nomeCliente").value.trim();
     const telFormulario = document.getElementById("telCliente").value.trim();
-    const vendedor = document.getElementById("nomeVendedor").value.trim() || 'Equipe Comercial Comvil';
+    const nomeVendedorInput = document.getElementById("nomeVendedor").value.trim();
+    const vendedor = nomeVendedorInput || 'Equipe Comercial Comvil';
     const telVendedor = document.getElementById("telVendedor").value.trim();
     const dadosComerciais = calcularValoresAtuais();
     const dataHoje = new Date();
@@ -403,14 +402,12 @@ function abrirImagemNovaAba() {
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
     ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
-    
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
     
     ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center";
     ctx.fillText("COMVIL BRINDES", 300, 665);
     
     ctx.fillStyle = "#555555"; ctx.font = "10px Arial";
-    // ATUALIZAÇÃO: Injeção do novo CNPJ no rodapé da folha de imagem exportada
     ctx.fillText("CNPJ: 36.206.286/0001-03  |  ✉️ comvil@comvil.com.br", 300, 685);
     
     let stringTelefones = "☎️ Fixo: 11 3461-0813  |  📱 WhatsApp: 11 97024-3064";
@@ -424,7 +421,13 @@ function abrirImagemNovaAba() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
         const telefoneLimpo = telFormulario.replace(/\D/g, "");
-        const textoInjetado = encodeURIComponent("Olá, segue o orçamento gerado pelo sistema corporativo da Comvil Embalagens.");
+        
+        // MUDANÇA AUTOMÁTICA DA MENSAGEM DO WHATSAPP COM BASE NA ASSINATURA DE ATENDIMENTO
+        let assinaturaMensagem = "Comvil Brindes";
+        if(nomeVendedorInput) {
+            assinaturaMensagem = nomeVendedorInput;
+        }
+        const textoInjetado = encodeURIComponent("Olá, segue o orçamento solicitado Att " + assinaturaMensagem + ".");
 
         novaAba.document.write(`
             <html>
@@ -462,8 +465,4 @@ function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
-}
-</script>
-</body>
-</html>
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(

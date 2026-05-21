@@ -146,32 +146,32 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
+// VALORES HARDCODED ATUALIZADOS PARA FAZER A DERRUBADA DO CACHE
 const bancoReserva = {
   "produtosConfigurados": [
     { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000],
+  "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
 window.onload = function() {
-    const cacheAdmin = localStorage.getItem('comvil_catalogo_cache');
-    if (cacheAdmin) {
-        database = JSON.parse(cacheAdmin);
-        if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
-        carregarMenusUnificados();
-    } else {
-        fetch('dados.json')
-            .then(response => response.json())
-            .then(data => { 
-                database = data; 
-                if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
-                carregarMenusUnificados(); 
-            })
-            .catch(() => { database = bancoReserva; carregarMenusUnificados(); });
-    }
+    // CORREÇÃO CRÍTICA: Limpa o cache desatualizado para forçar o recarregamento da nova fórmula matemática
+    localStorage.removeItem('comvil_catalogo_cache');
+    
+    fetch('dados.json')
+        .then(response => response.json())
+        .then(data => { 
+            database = data; 
+            if(!database.quantidades || database.quantidades.length === 0) database.quantidades = bancoReserva.quantidades;
+            carregarMenusUnificados(); 
+        })
+        .catch(() => { 
+            database = JSON.parse(JSON.stringify(bancoReserva)); 
+            carregarMenusUnificados(); 
+        });
 };
 
 function carregarMenusUnificados() {
@@ -180,7 +180,7 @@ function carregarMenusUnificados() {
     database.produtosConfigurados.forEach((prod) => {
         let opt = document.createElement("option");
         opt.value = prod.id;
-        opt.text = prod.nomeCompleto; // EXIBE APENAS O NOME COMERCIAL PURO (OCULTO)
+        opt.text = prod.nomeCompleto; 
         opt.setAttribute('data-detalhes', prod.nomeCompleto);
         opt.setAttribute('data-preco', prod.precoBase);
         produtoSel.add(opt);
@@ -191,7 +191,7 @@ function carregarMenusUnificados() {
     database.cordoes.forEach((c) => {
         let opt = document.createElement("option");
         opt.value = c.nome;
-        opt.text = c.nome; // EXIBE APENAS O NOME DO CORDÃO PURO (OCULTO)
+        opt.text = c.nome; 
         opt.setAttribute('data-preco', c.preco);
         cordaoSel.add(opt);
     });
@@ -238,7 +238,7 @@ function calcularValoresAtuais() {
     }
 
     // REGRA MATEMÁTICA CORRIGIDA: 
-    // Insumos por unidade -> Multiplica por Tiragem -> Soma Custo Fixo de Cor de Forma Isolada
+    // Insumos por unidade -> Multiplica por Tiragem -> Soma Custo Fixo de Cor Isolado no final do lote
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;

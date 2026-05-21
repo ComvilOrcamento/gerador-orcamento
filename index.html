@@ -124,7 +124,7 @@
 </div>
 
 <script>
-// SUBSTITUIÇÃO POR SÍMBOLOS E ARRAYS VAZIOS (SEM VALORES EMBUTIDOS NO CODIGO FONTE)
+// BASE VARIÁVEL SIMBÓLICA LIMPA
 let database = { 
     produtosConfigurados: [], 
     cordoes: [], 
@@ -153,10 +153,10 @@ function mascaraTelefone(input) {
 }
 
 window.onload = function() {
-    // COMANDO FORÇADO: Ignora completamente o cache local e faz a requisição crua ao dados.json físico
-    fetch('dados.json?t=' + new Date().getTime()) // Anti-cache via timestamp
+    // REQUISIÇÃO FORÇADA DIRETA AO ARQUIVO DO SERVIDOR (CONTRA ERROS DE CACHE)
+    fetch('dados.json?t=' + new Date().getTime())
         .then(response => {
-            if (!response.ok) throw new Error("Erro ao ler dados.json");
+            if (!response.ok) throw new Error("Falha ao abrir o dados.json");
             return response.json();
         })
         .then(data => { 
@@ -165,19 +165,18 @@ window.onload = function() {
         })
         .catch(err => { 
             console.error(err);
-            alert("Erro crítico: O arquivo 'dados.json' não foi encontrado ou está com formatação incorreta. Verifique o servidor."); 
+            alert("Erro: Não foi possível ler as configurações. Certifique-se de que exportou o arquivo 'dados.json' do painel administrativo para a pasta correta."); 
         });
 };
 
 function carregarMenusUnificados() {
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
-    
-    if (database.produtosConfigurados && database.produtosConfigurados.length > 0) {
+    if(database.produtosConfigurados) {
         database.produtosConfigurados.forEach((prod) => {
             let opt = document.createElement("option");
             opt.value = prod.id;
-            opt.text = prod.nomeCompleto; 
+            opt.text = prod.nomeCompleto; // EXIBE APENAS A DESCRIÇÃO COMERCIAL (PREÇO SEGREDO OCULTO)
             opt.setAttribute('data-detalhes', prod.nomeCompleto);
             opt.setAttribute('data-preco', prod.precoBase);
             produtoSel.add(opt);
@@ -186,11 +185,11 @@ function carregarMenusUnificados() {
 
     const cordaoSel = document.getElementById("selectCordao");
     cordaoSel.innerHTML = '';
-    if (database.cordoes && database.cordoes.length > 0) {
+    if(database.cordoes) {
         database.cordoes.forEach((c) => {
             let opt = document.createElement("option");
             opt.value = c.nome;
-            opt.text = c.nome; 
+            opt.text = c.nome; // EXIBE APENAS O NOME DO MATERIAL (PREÇO SEGREDO OCULTO)
             opt.setAttribute('data-preco', c.preco);
             cordaoSel.add(opt);
         });
@@ -198,7 +197,7 @@ function carregarMenusUnificados() {
 
     const qtdSel = document.getElementById("qtd");
     qtdSel.innerHTML = '';
-    if (database.quantidades && database.quantidades.length > 0) {
+    if(database.quantidades) {
         database.quantidades.forEach((q) => {
             let opt = new Option(q + " un", q);
             qtdSel.add(opt);
@@ -239,7 +238,7 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // OPERAÇÃO ARITMÉTICA DO LOTADO REAL EXATO:
+    // OPERAÇÃO MATEMÁTICA LÍMPIDA REVISADA (FIXO DE COR SOMADO SEM MULTIPLICAÇÃO)
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
@@ -383,7 +382,7 @@ function abrirImagemNovaAba() {
     startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + seller || vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
 
     const novaAba = window.open("", "_blank");

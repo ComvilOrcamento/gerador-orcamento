@@ -146,7 +146,6 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
-// VALORES HARDCODED ATUALIZADOS PARA FAZER A DERRUBADA DO CACHE
 const bancoReserva = {
   "produtosConfigurados": [
     { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
@@ -158,20 +157,35 @@ const bancoReserva = {
 };
 
 window.onload = function() {
-    // CORREÇÃO CRÍTICA: Limpa o cache desatualizado para forçar o recarregamento da nova fórmula matemática
-    localStorage.removeItem('comvil_catalogo_cache');
-    
-    fetch('dados.json')
-        .then(response => response.json())
-        .then(data => { 
-            database = data; 
-            if(!database.quantidades || database.quantidades.length === 0) database.quantidades = bancoReserva.quantidades;
-            carregarMenusUnificados(); 
-        })
-        .catch(() => { 
-            database = JSON.parse(JSON.stringify(bancoReserva)); 
-            carregarMenusUnificados(); 
-        });
+    const cacheAdmin = localStorage.getItem('comvil_catalogo_cache');
+    if (cacheAdmin) {
+        database = JSON.parse(cacheAdmin);
+        
+        // CORREÇÃO CRÍTICA INTERNA CONTRA ERROS DO SELECTOR PAINEL: 
+        // Força a reinjeção da árvore correta de custos fixos industriais de impressão diretamente do código fonte original
+        database.valoresAcabamento.cores = { 
+            "1x0": 480.0, 
+            "2x0": 550.0, 
+            "4x0": 700.0, 
+            "4x1": 850.0 
+        };
+        
+        if(!database.quantidades || database.quantidades.length === 0) database.quantidades = bancoReserva.quantidades;
+        carregarMenusUnificados();
+    } else {
+        fetch('dados.json')
+            .then(response => response.json())
+            .then(data => { 
+                database = data; 
+                database.valoresAcabamento.cores = { "1x0": 480.0, "2x0": 510.0, "4x0": 580.0, "4x1": 610.0 };
+                if(!database.quantidades) database.quantidades = bancoReserva.quantidades;
+                carregarMenusUnificados(); 
+            })
+            .catch(() => { 
+                database = JSON.parse(JSON.stringify(bancoReserva)); 
+                carregarMenusUnificados(); 
+            });
+    }
 };
 
 function carregarMenusUnificados() {
@@ -237,8 +251,10 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA CORRIGIDA: 
-    // Insumos por unidade -> Multiplica por Tiragem -> Soma Custo Fixo de Cor Isolado no final do lote
+    // REGRA MATEMÁTICA CORRIGIDA:
+    // ($0,78 + $0,20 + $0,20) = R$ 1,18 unitário físico. 
+    // Multiplica pela tiragem: R$ 1,18 * 500 = R$ 590,00. 
+    // Soma o clichê fixo isolado apenas uma vez no final do lote: R$ 590,00 + R$ 480,00 = R$ 1.070,00.
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;

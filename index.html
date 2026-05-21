@@ -152,7 +152,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000, 3000, 4000, 5000],
+  "quantidades": [500, 1000, 2000],
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -180,7 +180,7 @@ function carregarMenusUnificados() {
     database.produtosConfigurados.forEach((prod) => {
         let opt = document.createElement("option");
         opt.value = prod.id;
-        opt.text = `${prod.nomeCompleto} (R$ ${prod.precoBase.toFixed(2)})`;
+        opt.text = prod.nomeCompleto; // EXIBE APENAS O NOME COMERCIAL PURO (OCULTO)
         opt.setAttribute('data-detalhes', prod.nomeCompleto);
         opt.setAttribute('data-preco', prod.precoBase);
         produtoSel.add(opt);
@@ -191,7 +191,7 @@ function carregarMenusUnificados() {
     database.cordoes.forEach((c) => {
         let opt = document.createElement("option");
         opt.value = c.nome;
-        opt.text = `${c.nome} (+ R$ ${c.preco.toFixed(2)})`;
+        opt.text = c.nome; // EXIBE APENAS O NOME DO CORDÃO PURO (OCULTO)
         opt.setAttribute('data-preco', c.preco);
         cordaoSel.add(opt);
     });
@@ -233,19 +233,16 @@ function calcularValoresAtuais() {
     }
     
     let precoCoresFixo = 0;
-    if (database.valoresAcabamento && database.valoresAcabamento.cores && database.valoresAcabamento.cores[corSelecionada]) {
+    if (database.valoresAcabamento && database.valoresAcabamento.cores) {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA ENVIADA E CORRIGIDA:
-    // Passo 1 e 2: Custos físicos unitários calculados e multiplicados pela tiragem exata
+    // REGRA MATEMÁTICA CORRIGIDA: 
+    // Insumos por unidade -> Multiplica por Tiragem -> Soma Custo Fixo de Cor de Forma Isolada
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
-    
-    // Passo 3: Adição do valor fixo total de gravação de telas e cores
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
     
-    // Passo 4: Escalabilidade industrial extra acima de 2000 un
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
         let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 

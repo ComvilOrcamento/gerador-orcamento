@@ -217,7 +217,6 @@ function calcularValoresAtuais() {
     let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
     let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
     
-    // CAPTURA DOS PREÇOS DINÂMICOS DO ARQUIVO JSON / CACHE COM TRAVA CONTRA ERROS
     let precoIlhos = 0;
     if (temIlhos && database.valoresAcabamento) {
         precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
@@ -233,24 +232,30 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA ESTRUTURADA
+    // NOVA REGRA MATEMÁTICA SEM OS 70% DE MARGEM GLOBAL:
+    // Passo 1: Soma dos custos unitários dos insumos físicos
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
-    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
-    let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
     
+    // Passo 2: Custo físico multiplicado pela tiragem (quantidade)
+    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
+    
+    // Passo 3: Soma do custo fixo de gravação de telas de cores / impressão
+    let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
+    
+    // Passo 4: Acréscimo industrial escalonado acima de 2000 un (R$ 50,00 por bloco de 1000 excedentário)
     if (qtd > 2000) {
         let unidadesExcedentes = qtd - 2000;
         let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
-        custoTotalAntesDoLucro += (blocksDeMil * 50.00);
+        custoTotalFinalDoLote += (blocksDeMil * 50.00);
     }
     
-    let totalLoteComMargem = custoTotalAntesDoLucro * 1.70;
-    let precoUnitarioDeVenda = totalLoteComMargem / qtd;
+    // Obtenção direta da fração unitária final de venda sem aplicação de margem
+    let precoUnitarioDeVenda = custoTotalFinalDoLote / qtd;
     
     return { 
         custoUnitario: precoUnitarioDeVenda, 
         qtd, 
-        total: totalLoteComMargem, 
+        total: custoTotalFinalDoLote, 
         itemSelecionado, 
         cordaoSelecionado, 
         corSelecionada, 
@@ -350,7 +355,7 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
     ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
-    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : '';
+    let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.text : '';
     let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
     let partes = detalhesTexto.split(" | ");
     ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
@@ -416,7 +421,7 @@ function abrirImagemNovaAba() {
     }
 }
 
-function desenhoCaixaPdf(ctx, x, y, w, h, titulo) {
+function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";

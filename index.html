@@ -217,6 +217,7 @@ function calcularValoresAtuais() {
     let precoProdutoBase = itemSelecionado ? parseFloat(itemSelecionado.dataset.preco || 0) : 0;
     let precoCordaoAlca = cordaoSelecionado ? parseFloat(cordaoSelecionado.dataset.preco || 0) : 0;
     
+    // CAPTURA DOS PREÇOS DINÂMICOS DO ARQUIVO JSON / CACHE COM TRAVA CONTRA ERROS
     let precoIlhos = 0;
     if (temIlhos && database.valoresAcabamento) {
         precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
@@ -232,7 +233,7 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA INTERNA REVISADA
+    // REGRA MATEMÁTICA ESTRUTURADA
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalAntesDoLucro = subtotalTiragemFisica + precoCoresFixo;
@@ -272,7 +273,7 @@ function gerarVisualizacaoTela() {
     if(!nome || !tel) { alert("Erro: Nome e Telefone do cliente são obrigatórios!"); return; }
     
     const dadosComerciais = calcularValoresAtuais();
-    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.dataset.detalhes : 'Nenhum produto';
+    const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.text : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
 
     const inputNumero = document.getElementById("numOrcamento");
@@ -415,7 +416,7 @@ function abrirImagemNovaAba() {
     }
 }
 
-function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
+function desenhoCaixaPdf(ctx, x, y, w, h, titulo) {
     ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";

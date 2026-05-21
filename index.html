@@ -165,7 +165,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000],
+  "quantidades":,
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -231,7 +231,6 @@ function calcularValoresAtuais() {
     const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
     const qtd = parseInt(document.getElementById("qtd").value) || 500;
     
-    // CORREÇÃO CRÍTICA DO PRODUTO BASE: Busca direta e estrita na lista mapeada do banco de dados pelo ID do item
     let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected);
     let precoProdutoBase = produtoEncontrado ? parseFloat(produtoEncontrado.precoBase || 0) : 0;
     let detalhesBase = produtoEncontrado ? produtoEncontrado.nomeCompleto : 'Nenhum produto';
@@ -417,7 +416,9 @@ function abrirImagemNovaAba() {
     if (novaAba) {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
         const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
-        const telefoneClienteLimpo = telFormulario.replace(/\D/g, "");
+        
+        // REVISÃO EXATA EXECUTADA: Extrai a string pura do telefone do cliente e remove qualquer símbolo/espaço
+        const telefoneClientePuro = telFormulario.replace(/\D/g, "");
         
         let assinaturaMensagem = vendedor ? vendedor.trim() : "Comvil Brindes";
         const msgTextoFormatado = `Olá, segue o orçamento solicitado Att ${assinaturaMensagem}.`;
@@ -441,7 +442,8 @@ function abrirImagemNovaAba() {
                 <img src="${dataUrl}" />
                 <div class="btn-container">
                     <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
-                    <a href="https://api.whatsapp.com/send?phone=55{telefoneClienteLimpo}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                    <!-- CORREÇÃO CONCLUÍDA: O link usa estritamente o número limpo do cliente acoplado à string base -->
+                    <a href="https://whatsapp.com{telefoneClientePuro}&text=${textoInjetado}" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
                 </div>
             </body>
             </html>

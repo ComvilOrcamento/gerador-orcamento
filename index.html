@@ -8,29 +8,29 @@
         * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f4f6; padding: 20px; display: flex; justify-content: center; }
         .container { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { font-size: 24px; margin-bottom: 20px; color: #000; }
-        h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #0f172a; }
+        h2 { font-size: 14px; margin: 15px 0 10px 0; color: #334155; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
         .row { display: flex; gap: 15px; margin-bottom: 12px; }
         .field { flex: 1; display: flex; flex-direction: column; }
-        label { font-size: 11px; margin-bottom: 4px; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
+        label { font-size: 11px; margin-bottom: 4px; color: #64748b; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; background: #fff; height: 38px; }
         
-        input:focus, select:focus { border-color: #0056b3; }
-        input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
+        input:focus, select:focus { border-color: #2563eb; }
+        input[readonly] { background-color: #f8fafc; color: #64748b; border-color: #e2e8f0; cursor: not-allowed; }
         
-        .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
-        .btn-principal:hover { background: #002244; }
+        .btn-principal { width: 100%; background: #1e293b; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; transition: background 0.2s; }
+        .btn-principal:hover { background: #0f172a; }
         
         .botoes-container { display: flex; gap: 15px; margin-top: 15px; width: 100%; }
-        .btn-exportar { flex: 1; background: #0056b3; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; height: 42px; }
-        .btn-exportar:hover { background: #004085; }
+        .btn-exportar { flex: 1; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; height: 42px; transition: background 0.2s; }
+        .btn-exportar:hover { background: #1d4ed8; }
         
-        #area-orcamento { background: #ffffff; border: 1px solid #ddd; padding: 25px; margin-top: 15px; color: #333; border-radius: 6px; display: none; }
-        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 15px; gap: 15px; }
+        #area-orcamento { background: #ffffff; border: 1px solid #e2e8f0; padding: 25px; margin-top: 15px; color: #334155; border-radius: 6px; display: none; }
+        .logos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #2563eb; padding-bottom: 15px; gap: 15px; }
         .logo-box { flex: 1; display: flex; align-items: center; }
         .logo-box img { max-height: 55px; max-width: 150px; object-fit: contain; display: block; }
-        .secao-preview { margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border-left: 3px solid #0056b3; font-size: 13px; line-height: 1.5; }
-        .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 5px; }
+        .secao-preview { margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 6px; border-left: 3px solid #2563eb; font-size: 13px; line-height: 1.5; }
+        .preview-titulo { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -100,17 +100,12 @@
     <button class="btn-principal" onclick="gerarVisualizacaoTela()">Gerar Orçamento</button>
 
     <div id="bloco-resultado" style="display: none;">
-        <div class="field" style="margin-bottom: 15px; background: #fdfdfd; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px;">
-            <label style="color: #64748b; font-weight: bold;">Número do Orçamento Gerado</label>
-            <input type="text" id="numOrcamento" placeholder="Número automático" readonly>
-        </div>
-
         <div id="area-orcamento">
             <div class="logos-header">
                 <div class="logo-box"><img id="img-minha-preview" src="logo-empresa.png" onerror="this.src='https://placehold.co'"></div>
-                <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #333;"></div>
+                <div id="preview-numeracao-topo" style="font-size: 14px; font-weight: bold; color: #1e293b;"></div>
             </div>
-            <div style="font-size:15px; font-weight:bold; color:#0056b3; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
+            <div style="font-size:15px; font-weight:bold; color:#2563eb; margin-bottom:15px; text-transform:uppercase;">Pré-visualização Interna</div>
             <div class="secao-preview"><div class="preview-titulo">Dados do Formulário</div><div id="text-dados-cliente"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Especificações do Pedido</div><div id="text-dados-produto"></div></div>
             <div class="secao-preview"><div class="preview-titulo">Financeiro</div><div id="text-dados-financeiro"></div></div>
@@ -130,6 +125,8 @@ let database = {
     quantidades: [], 
     valoresAcabamento: null 
 };
+
+let numeroOrcamentoAtualInstancia = "";
 
 let objImgMinha = new Image();
 objImgMinha.src = "logo-empresa.png";
@@ -157,7 +154,7 @@ const bancoReserva = {
     { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
   "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
-  "quantidades": [500, 1000, 2000, 3000, 5000],
+  "quantidades":,
   "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
@@ -247,7 +244,6 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA REAL
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
@@ -258,7 +254,6 @@ function calcularValoresAtuais() {
         custoTotalFinalDoLote += (blocksDeMil * 50.00);
     }
     
-    // APLICAÇÃO CORRETA DOS 70% DE MARGEM GERAL DE LUCRO
     let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70;
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
@@ -275,11 +270,10 @@ function calcularValoresAtuais() {
 }
 
 function obterNumeroIdentificador() {
-    const campoNum = document.getElementById("numOrcamento").value.trim();
-    if(campoNum) return campoNum;
-    
+    if(numeroOrcamentoAtualInstancia) return numeroOrcamentoAtualInstancia;
     const d = new Date();
-    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
+    numeroOrcamentoAtualInstancia = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + String(d.getMilliseconds()).substring(0,2);
+    return numeroOrcamentoAtualInstancia;
 }
 
 function gerarVisualizacaoTela() {
@@ -291,12 +285,9 @@ function gerarVisualizacaoTela() {
     const detalhesBase = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : 'Nenhum produto';
     const nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
 
-    const inputNumero = document.getElementById("numOrcamento");
-    if (!inputNumero.value.trim()) {
-        inputNumero.value = obterNumeroIdentificador();
-    }
+    const numeroFinal = obterNumeroIdentificador();
+    document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
 
-    document.getElementById("preview-numeracao-topo").innerText = "Nº " + inputNumero.value;
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
     document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
@@ -351,19 +342,21 @@ function abrirImagemNovaAba() {
     } catch(e){}
 
     const numeroFinal = obterNumeroIdentificador();
-    ctx.fillStyle = "#333333";
+    ctx.fillStyle = "#1e293b"; // MUDANÇA: Cor Grafite Escuro para o Número do Orçamento
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "right";
     ctx.fillText("ORÇAMENTO Nº " + numeroFinal, 565, 60);
 
     ctx.textAlign = "left";
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke();
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130);
+    ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(35, 95); ctx.lineTo(565, 95); ctx.stroke(); // MUDANÇA: Linha divisória em Azul Royal
+    ctx.fillStyle = "#1e293b"; ctx.font = "bold 15px Arial"; ctx.fillText("PROPOSTA COMERCIAL DE EMBALAGENS", 35, 130); // MUDANÇA: Título em Grafite Escuro
+    
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
-    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
+    ctx.fillStyle = "#334155"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
+    
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
-    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
+    ctx.fillStyle = "#334155"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
     let detalhesTexto = dadosComerciais.itemSelecionado ? dadosComerciais.itemSelecionado.getAttribute('data-detalhes') : '';
     let nomeCordao = dadosComerciais.cordaoSelecionado ? dadosComerciais.cordaoSelecionado.value : 'Nenhum';
@@ -372,29 +365,31 @@ function abrirImagemNovaAba() {
     if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
     ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
     ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
-    desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
-    ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     
+    desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
+    ctx.fillStyle = "#334155"; ctx.font = "12px Arial";
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
     ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
+    
+    ctx.fillStyle = "#2563eb"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; // MUDANÇA: Total destacado em Azul Royal
     ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
     
-    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
-    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    // MUDANÇA: Bloco de Termos com Fundo e Bordas na nova paleta suave
+    ctx.fillStyle = "#f8fafc"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
+    ctx.fillStyle = "#2563eb"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
     
-    ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
+    ctx.fillStyle = "#475569"; ctx.font = "11px Arial";
     let startY = 495;
     const maxTextWidth = 510; 
     const lineSpacing = 16;
 
     startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);
     startY = wrapText(ctx, "• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, startY, maxTextWidth, lineSpacing);
-    startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Prazo de Production: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
     wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
     
-    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
+    ctx.fillStyle = "#94a3b8"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + vendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
 
     const novaAba = window.open("", "_blank");
     if (novaAba) {
@@ -408,11 +403,11 @@ function abrirImagemNovaAba() {
             <head>
                 <title>Exportar Orçamento</title>
                 <style>
-                    body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
-                    img { max-width:95%; max-height:80vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
+                    body { margin:0; background:#1e293b; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
+                    img { max-width:95%; max-height:80vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; border-radius: 4px; }
                     .btn-container { width: 100%; display: flex; justify-content: center; gap: 15px; }
-                    .btn-download { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
-                    .btn-download:hover { background: #004085; }
+                    .btn-download { background: #2563eb; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
+                    .btn-download:hover { background: #1d4ed8; }
                     .btn-whatsapp { background: #25D366; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
                     .btn-whatsapp:hover { background: #128C7E; }
                 </style>
@@ -430,12 +425,16 @@ function abrirImagemNovaAba() {
     }
 }
 
+function determinarCaixaPdf(ctx, x, y, w, h, titulo) {
+    desenharCaixaPdf(ctx, x, y, w, h, titulo);
+}
+
 function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
-    ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
+    ctx.fillStyle = "#f8fafc"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = "#64748b"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
     ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
-    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+    ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke(); // MUDANÇA: Tarja lateral em Azul Royal
 }
 </script>
 </body>

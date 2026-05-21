@@ -151,6 +151,16 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
+const bancoReserva = {
+  "produtosConfigurados": [
+    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
+  ],
+  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "quantidades": [500, 1000, 2000, 3000, 5000],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
+};
+
 window.onload = function() {
     fetch('dados.json?t=' + new Date().getTime())
         .then(response => {
@@ -162,8 +172,9 @@ window.onload = function() {
             carregarMenusUnificados(); 
         })
         .catch(err => { 
-            console.error(err);
-            alert("Erro: Não foi possível ler as configurações. Certifique-se de que exportou o arquivo 'dados.json' do painel administrativo para a pasta correta."); 
+            console.warn("Utilizando banco reserva integrado.");
+            database = JSON.parse(JSON.stringify(bancoReserva));
+            carregarMenusUnificados(); 
         });
 };
 
@@ -236,7 +247,7 @@ function calcularValoresAtuais() {
         precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
     }
 
-    // REGRA MATEMÁTICA COM ADIÇÃO DE 70% DE MARGEM CORPORATIVA NO TOTAL
+    // REGRA MATEMÁTICA REAL
     let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
     let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
     let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
@@ -247,8 +258,8 @@ function calcularValoresAtuais() {
         custoTotalFinalDoLote += (blocksDeMil * 50.00);
     }
     
-    // APLICAÇÃO DE MARGEM DE 70% SOBRE O MONTANTE BRUTO DO PEDIDO (LUCRO EMPRESARIAL)
-    let totalLoteComMargem Lucro = custoTotalFinalDoLote * 1.70;
+    // APLICAÇÃO CORRETA DOS 70% DE MARGEM GERAL DE LUCRO
+    let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70;
     let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
     
     return { 

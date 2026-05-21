@@ -18,13 +18,6 @@
         input:focus, select:focus { border-color: #0056b3; }
         input[readonly] { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed; }
         
-        /* ESTILOS DAS ABAS */
-        .tabs-menu { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .tab-link { padding: 10px 15px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; color: #64748b; font-size: 13px; }
-        .tab-link.active { background: #003366; color: white; border-color: #003366; }
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
-
         .btn-principal { width: 100%; background: #003366; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; margin: 15px 0; }
         .btn-principal:hover { background: #002244; }
         
@@ -47,12 +40,6 @@
 <div class="container">
     <h1>Novo Orçamento</h1>
 
-    <!-- MENU DE SELEÇÃO DE ABAS -->
-    <div class="tabs-menu">
-        <button class="tab-link active" onclick="mudarAba(event, 'aba-sacolas')">Sacolas</button>
-        <button class="tab-link" onclick="mudarAba(event, 'aba-mao')">Mão de Torcida em E.V.A</button>
-    </div>
-
     <h2>Dados do cliente</h2>
     <div class="field" style="margin-bottom: 12px;">
         <label>Nome *</label>
@@ -63,94 +50,48 @@
         <div class="field"><label>E-mail</label><input type="email" id="emailCliente" placeholder="email@exemplo.com (Opcional)"></div>
     </div>
 
-    <!-- CONTEÚDO DA ABA 1: SACOLAS -->
-    <div id="aba-sacolas" class="tab-pane active">
-        <h2>Itens do orçamento (Sacolas)</h2>
-        <div class="field" style="margin-bottom: 12px;">
-            <label>Configuração do Produto Base *</label>
-            <select id="selectProdutoConfigurado"></select>
+    <h2>Itens do orçamento</h2>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Configuração do Produto Base *</label>
+        <select id="selectProdutoConfigurado"></select>
+    </div>
+    
+    <div class="row">
+        <div class="field">
+            <label>Impressão / Cores *</label>
+            <select id="selectCores">
+                <option value="1x0">1x0</option>
+                <option value="2x0">2x0</option>
+                <option value="4x0">4x0</option>
+                <option value="4x1">4x1</option>
+            </select>
         </div>
-        
-        <div class="row">
-            <div class="field">
-                <label>Impressão / Cores *</label>
-                <select id="selectCores">
-                    <option value="1x0">1x0</option>
-                    <option value="2x0">2x0</option>
-                    <option value="4x0">4x0</option>
-                    <option value="4x1">4x1</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Acabamento com Ilhós *</label>
-                <select id="selectIlhos">
-                    <option value="Não">Não</option>
-                    <option value="Sim">Sim</option>
-                </select>
-            </div>
+        <div class="field">
+            <label>Acabamento com Ilhós *</label>
+            <select id="selectIlhos">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
         </div>
-        
-        <div class="row">
-            <div class="field">
-                <label>Tipo de Cordão / Alça *</label>
-                <select id="selectCordao"></select>
-            </div>
-            <div class="field">
-                <label>Furo para Laço *</label>
-                <select id="selectFuroLaco">
-                    <option value="Não">Não</option>
-                    <option value="Sim">Sim</option>
-                </select>
-            </div>
+    </div>
+    
+    <div class="row">
+        <div class="field">
+            <label>Tipo de Cordão / Alça *</label>
+            <select id="selectCordao"></select>
         </div>
-
-        <div class="field" style="margin-bottom: 12px;">
-            <label>Quantidade Mínima *</label>
-            <select id="qtd"></select>
+        <div class="field">
+            <label>Furo para Laço *</label>
+            <select id="selectFuroLaco">
+                <option value="Não">Não</option>
+                <option value="Sim">Sim</option>
+            </select>
         </div>
     </div>
 
-    <!-- CONTEÚDO DA ABA 2: MÃO DE TORCIDA -->
-    <div id="aba-mao" class="tab-pane">
-        <h2>Itens do orçamento (Mão de Torcida)</h2>
-        <div class="field" style="margin-bottom: 12px;">
-            <label>Modelo Base *</label>
-            <select id="selectMaoModelo"></select>
-        </div>
-        
-        <div class="row">
-            <div class="field">
-                <label>Tipo *</label>
-                <select id="selectMaoTipo">
-                    <option value="Luva">Luva</option>
-                    <option value="Argola">Argola</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Cores de Gravação *</label>
-                <select id="selectMaoCores"></select>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="field">
-                <label>Selecione a Quantidade *</label>
-                <select id="selectMaoQtd" onchange="toggleQtdVariavelMao(this.value)">
-                    <option value="100">100 un</option>
-                    <option value="200">200 un</option>
-                    <option value="300">300 un</option>
-                    <option value="500">500 un</option>
-                    <option value="1000">1000 un</option>
-                    <option value="2000">2000 un</option>
-                    <option value="5000">5000 un</option>
-                    <option value="variavel">Quantidade Variável</option>
-                </select>
-            </div>
-            <div class="field" id="bloco-qtd-variavel-mao" style="display: none;">
-                <label>Digite a Quantidade Customizada</label>
-                <input type="number" id="inputMaoQtdVariavel" min="1" placeholder="Ex: 750">
-            </div>
-        </div>
+    <div class="field" style="margin-bottom: 12px;">
+        <label>Quantidade Mínima *</label>
+        <select id="qtd"></select>
     </div>
 
     <h2>Dados de Atendimento</h2>
@@ -193,12 +134,9 @@ let database = {
     produtosConfigurados: [], 
     cordoes: [], 
     quantidades: [], 
-    valoresAcabamento: null,
-    maoModelos: [], // Chave preparada para o JSON da Mão de Torcida
-    maoCores: []    // Chave preparada para o JSON da Mão de Torcida
+    valoresAcabamento: null 
 };
 
-let abaAtivaAtual = "aba-sacolas";
 let numeroOrcamentoAtualInstancia = "";
 
 let objImgMinha = new Image();
@@ -221,28 +159,14 @@ function mascaraTelefone(input) {
     input.value = v;
 }
 
-function mudarAba(e, tabId) {
-    document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-    e.target.classList.add('active');
-    document.getElementById(tabId).classList.add('active');
-    abaAtivaAtual = tabId;
-}
-
-function toggleQtdVariavelMao(valor) {
-    const bloco = document.getElementById("bloco-qtd-variavel-mao");
-    bloco.style.display = (valor === "variavel") ? "block" : "none";
-}
-
 const bancoReserva = {
   "produtosConfigurados": [
-    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 }
+    { "id": 1, "nomeCompleto": "500 Sacolas 17x18x8 - Offset 180g - sem revestimento", "precoBase": 0.78 },
+    { "id": 2, "nomeCompleto": "Sacola Offset 180g - 18x24x8 - Laminação BOPP Fosca", "precoBase": 4.50 }
   ],
-  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }],
-  "quantidades":,
-  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } },
-  "maoModelos": [{ "id": 1, "nome": "Mão de E.V.A Padrão 40cm", "precoBase": 2.50 }],
-  "maoCores": [{ "nome": "1 Cor / Silk", "preco": 0.30 }, { "nome": "2 Cores / Silk", "preco": 0.50 }]
+  "cordoes": [{ "nome": "Nylon", "preco": 0.20 }, { "nome": "Gorgurão", "preco": 0.80 }],
+  "quantidades": [500, 1000, 2000],
+  "valoresAcabamento": { "ilhos": 0.20, "furoLaco": 0.15, "cores": { "1x0": 480.0, "2x0": 550.0, "4x0": 700.0, "4x1": 850.0 } }
 };
 
 window.onload = function() {
@@ -267,7 +191,6 @@ window.onload = function() {
 };
 
 function carregarMenusUnificados() {
-    // ABA SACOLAS
     const produtoSel = document.getElementById("selectProdutoConfigurado");
     produtoSel.innerHTML = '';
     if(database.produtosConfigurados) {
@@ -298,29 +221,6 @@ function carregarMenusUnificados() {
             qtdSel.add(opt);
         });
     }
-
-    // ABA MÃO DE TORCIDA
-    const maoModeloSel = document.getElementById("selectMaoModelo");
-    maoModeloSel.innerHTML = '';
-    if(database.maoModelos) {
-        database.maoModelos.forEach((m) => {
-            let opt = document.createElement("option");
-            opt.value = m.id;
-            opt.text = m.nome;
-            maoModeloSel.add(opt);
-        });
-    }
-
-    const maoCoresSel = document.getElementById("selectMaoCores");
-    maoCoresSel.innerHTML = '';
-    if(database.maoCores) {
-        database.maoCores.forEach((c) => {
-            let opt = document.createElement("option");
-            opt.value = c.nome;
-            opt.text = c.nome;
-            maoCoresSel.add(opt);
-        });
-    }
 }
 
 function formatarMoeda(valor) {
@@ -328,96 +228,59 @@ function formatarMoeda(valor) {
 }
 
 function calcularValoresAtuais() {
-    if (abaAtivaAtual === "aba-sacolas") {
-        const idProdutoSelected = parseInt(document.getElementById("selectProdutoConfigurado").value);
-        const nomeCordaoSelected = document.getElementById("selectCordao").value;
-        const corSelecionada = document.getElementById("selectCores").value;
-        const temIlhos = document.getElementById("selectIlhos").value === "Sim";
-        const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
-        const qtd = parseInt(document.getElementById("qtd").value) || 500;
-        
-        let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected);
-        let precoProdutoBase = produtoEncontrado ? parseFloat(produtoEncontrado.precoBase || 0) : 0;
-        let detalhesBase = produtoEncontrado ? produtoEncontrado.nomeCompleto : 'Nenhum produto';
-        
-        let cordaoEncontrado = database.cordoes.find(c => c.nome === nomeCordaoSelected);
-        let precoCordaoAlca = cordaoEncontrado ? parseFloat(cordaoEncontrado.preco || 0) : 0;
-        
-        let precoIlhos = 0;
-        if (temIlhos && database.valoresAcabamento) {
-            precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
-        }
-        
-        let precoFuroLaco = 0;
-        if (temFuroLaco && database.valoresAcabamento) {
-            precoFuroLaco = parseFloat(database.valoresAcabamento.furoLaco || 0);
-        }
-        
-        let precoCoresFixo = 0;
-        if (database.valoresAcabamento && database.valoresAcabamento.cores) {
-            precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
-        }
-
-        let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
-        let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
-        let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
-        
-        if (qtd > 2000) {
-            let unidadesExcedentes = qtd - 2000;
-            let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
-            custoTotalFinalDoLote += (blocksDeMil * 50.00);
-        }
-        
-        let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70;
-        let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
-        
-        return { 
-            tipoItem: "sacola",
-            custoUnitario: precoUnitarioDeVenda, 
-            qtd, 
-            total: totalLoteComMargemLucro, 
-            detalhesBase, 
-            nomeCordao: nomeCordaoSelected, 
-            corSelecionada, 
-            temFuroLaco, 
-            temIlhos 
-        };
-    } else {
-        // CÁLCULO ESTRUTURAL INICIAL PARA A ABA MÃO DE TORCIDA
-        const idMaoSelected = parseInt(document.getElementById("selectMaoModelo").value);
-        const tipoMao = document.getElementById("selectMaoTipo").value;
-        const corMao = document.getElementById("selectMaoCores").value;
-        
-        const qtdSelect = document.getElementById("selectMaoQtd").value;
-        let qtd = 100;
-        if (qtdSelect === "variavel") {
-            qtd = parseInt(document.getElementById("inputMaoQtdVariavel").value) || 100;
-        } else {
-            qtd = parseInt(qtdSelect);
-        }
-
-        let maoEncontrada = database.maoModelos.find(m => m.id === idMaoSelected);
-        let detalhesBase = maoEncontrada ? maoEncontrada.nome : "Mão de E.V.A";
-        let precoBase = maoEncontrada ? parseFloat(maoEncontrada.precoBase || 0) : 0;
-
-        let corEncontrada = database.maoCores.find(c => c.nome === corMao);
-        let precoCor = corEncontrada ? parseFloat(corEncontrada.preco || 0) : 0;
-
-        // Fórmula temporária básica (Preço Base + Preço Cor) * Quantidade
-        let custoLote = (precoBase + precoCor) * qtd;
-        let totalMaoLucro = custoLote * 1.70; // Mantendo os 70% padrão corporativo
-        let unitarioMao = totalMaoLucro / qtd;
-
-        return {
-            tipoItem: "mao",
-            custoUnitario: unitarioMao,
-            qtd,
-            total: totalMaoLucro,
-            detalhesBase,
-            tipoMao,
-            corMao
-        };
+    const idProdutoSelected = parseInt(document.getElementById("selectProdutoConfigurado").value);
+    const nomeCordaoSelected = document.getElementById("selectCordao").value;
+    const corSelecionada = document.getElementById("selectCores").value;
+    const temIlhos = document.getElementById("selectIlhos").value === "Sim";
+    const temFuroLaco = document.getElementById("selectFuroLaco").value === "Sim";
+    const qtd = parseInt(document.getElementById("qtd").value) || 500;
+    
+    // CORREÇÃO ESTRITA BLINDADA: Mapeamento de busca segura no array para evitar conflito com atributos HTML
+    let produtoEncontrado = database.produtosConfigurados.find(p => p.id === idProdutoSelected);
+    let precoProdutoBase = produtoEncontrado ? parseFloat(produtoEncontrado.precoBase || 0) : 0;
+    let detalhesBase = produtoEncontrado ? produtoEncontrado.nomeCompleto : 'Nenhum produto';
+    
+    let cordaoEncontrado = database.cordoes.find(c => c.nome === nomeCordaoSelected);
+    let precoCordaoAlca = cordaoEncontrado ? parseFloat(cordaoEncontrado.preco || 0) : 0;
+    
+    let precoIlhos = 0;
+    if (temIlhos && database.valoresAcabamento) {
+        precoIlhos = parseFloat(database.valoresAcabamento.ilhos || 0);
     }
+    
+    let precoFuroLaco = 0;
+    if (temFuroLaco && database.valoresAcabamento) {
+        precoFuroLaco = parseFloat(database.valoresAcabamento.furoLaco || 0);
+    }
+    
+    let precoCoresFixo = 0;
+    if (database.valoresAcabamento && database.valoresAcabamento.cores) {
+        precoCoresFixo = parseFloat(database.valoresAcabamento.cores[corSelecionada] || 0);
+    }
+
+    let somaInsumosFisicosUnitarios = precoProdutoBase + precoIlhos + precoCordaoAlca + precoFuroLaco;
+    let subtotalTiragemFisica = somaInsumosFisicosUnitarios * qtd;
+    let custoTotalFinalDoLote = subtotalTiragemFisica + precoCoresFixo;
+    
+    if (qtd > 2000) {
+        let unidadesExcedentes = qtd - 2000;
+        let blocksDeMil = Math.ceil(unidadesExcedentes / 1000); 
+        custoTotalFinalDoLote += (blocksDeMil * 50.00);
+    }
+    
+    let totalLoteComMargemLucro = custoTotalFinalDoLote * 1.70;
+    let precoUnitarioDeVenda = totalLoteComMargemLucro / qtd;
+    
+    return { 
+        custoUnitario: precoUnitarioDeVenda, 
+        qtd, 
+        total: totalLoteComMargemLucro, 
+        detalhesBase, 
+        nomeCordao: nomeCordaoSelected, 
+        corSelecionada, 
+        temFuroLaco, 
+        temIlhos 
+    };
 }
 
 function obterNumeroIdentificador() {
@@ -434,17 +297,12 @@ function gerarVisualizacaoTela() {
     
     const dadosComerciais = calcularValoresAtuais();
     const telVendedor = document.getElementById("telVendedor").value.trim();
+
     const numeroFinal = obterNumeroIdentificador();
-    
     document.getElementById("preview-numeracao-topo").innerText = "Nº " + numeroFinal;
+
     document.getElementById("text-dados-cliente").innerHTML = `<strong>Nome:</strong> ${nome} <br> <strong>Telefone:</strong> ${tel}`;
-    
-    if (dadosComerciais.tipoItem === "sacola") {
-        document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
-    } else {
-        document.getElementById("text-dados-produto").innerHTML = `<strong>Produto:</strong> ${dadosComerciais.detalhesBase}<br><strong>Tipo:</strong> ${dadosComerciais.tipoMao} <br><strong>Estampa:</strong> ${dadosComerciais.corMao}`;
-    }
-    
+    document.getElementById("text-dados-produto").innerHTML = `<strong>Base:</strong> ${dadosComerciais.detalhesBase}<br><strong>Cores:</strong> ${dadosComerciais.corSelecionada} | <strong>Ilhós:</strong> ${dadosComerciais.temIlhos ? 'Sim' : 'Não'}<br><strong>Alça:</strong> ${dadosComerciais.nomeCordao} | <strong>Furo Laço:</strong> ${dadosComerciais.temFuroLaco ? 'Sim' : 'Não'}`;
     document.getElementById("text-dados-financeiro").innerHTML = `<strong>Quantidade:</strong> ${dadosComerciais.qtd} un | <strong>Unitário de Venda:</strong> ${formatarMoeda(dadosComerciais.custoUnitario)} <br> <strong>Total do Lote: ${formatarMoeda(dadosComerciais.total)}</strong>`;
     
     let textoContatoVendedor = telVendedor ? ` | 📞 Vendedor: ${telVendedor}` : '';
@@ -512,24 +370,97 @@ function abrirImagemNovaAba() {
     desenharCaixaPdf(ctx, 35, 150, 530, 65, "Dados do Cliente");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
     ctx.fillText("Nome / Razão Social: " + nome, 50, 185); ctx.fillText("Telefone: " + telFormulario, 50, 203);
-    
     desenharCaixaPdf(ctx, 35, 235, 530, 105, "Especificações Técnicas do Pedido");
-    ctx.fillStyle = "#333333"; font = "bold 11px Arial";
+    ctx.fillStyle = "#333333"; ctx.font = "bold 11px Arial"; ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
     
-    if (dadosComerciais.tipoItem === "sacola") {
-        ctx.fillText("Modelo base de fábrica:", 50, 270); ctx.font = "11px Arial";
-        let partes = dadosComerciais.detalhesBase.split(" | ");
-        ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
-        if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
-        ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
-        ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
-    } else {
-        ctx.fillText("Modelo de Mão selecionado:", 50, 270); ctx.font = "11px Arial";
-        ctx.fillText("• " + dadosComerciais.detalhesBase, 50, 290);
-        ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e estampa:", 50, 324); ctx.font = "11px Arial";
-        ctx.fillText("• Tipo estrutural: " + dadosComerciais.tipoMao + "  |  • Gravação: " + dadosComerciais.corMao, 50, 338);
-    }
-    
+    let detalhesTexto = dadosComerciais.detalhesBase;
+    let partes = detalhesTexto.split(" | ");
+    ctx.fillText("• " + partes.slice(0, 4).join(" | "), 50, 290);
+    if(partes.length > 4) ctx.fillText("• " + partes.slice(4).join(" | "), 50, 306);
+    ctx.font = "bold 11px Arial"; ctx.fillText("Especificações de montagem e impressão:", 50, 324); ctx.font = "11px Arial";
+    ctx.fillText("• Cores: " + dadosComerciais.corSelecionada + "  |  • Ilhós: " + (dadosComerciais.temIlhos ? "Sim" : "Não") + "  |  • Alça: " + dadosComerciais.nomeCordao + "  |  • Furo Laço: " + (dadosComerciais.temFuroLaco ? "Sim" : "Não"), 50, 338);
     desenharCaixaPdf(ctx, 35, 360, 530, 70, "Resumo Financeiro");
     ctx.fillStyle = "#333333"; ctx.font = "12px Arial";
-    ctx.fillText("
+    ctx.fillText("Quantidade Solicitada: " + dadosComerciais.qtd + " unidades", 50, 395); 
+    
+    ctx.fillText("Preço Unitário Médio de Venda: " + formatarMoeda(dadosComerciais.custoUnitario), 50, 415);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right"; 
+    ctx.fillText("TOTAL DA PROPOSTA: " + formatarMoeda(dadosComerciais.total), 550, 410);
+    
+    ctx.fillStyle = "#f0f7ff"; ctx.fillRect(35, 450, 530, 135); ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 1; ctx.strokeRect(35, 450, 530, 135);
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "left"; ctx.fillText("⚠️ CONDIÇÕES COMERCIAIS DE CONTRATAÇÃO", 45, 472);
+    
+    ctx.fillStyle = "#444444"; ctx.font = "11px Arial";
+    let startY = 495;
+    const maxTextWidth = 510; 
+    const lineSpacing = 16;
+
+    startY = wrapText(ctx, "• Validade da Proposta: Ativa por 10 dias (vencimento obrigatório em " + dataValidade.toLocaleDateString('pt-BR') + ").", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Forma de Pagamento: 50% de entrada na aprovação do pedido e 50% restante para 21 dias após a entrega.", 45, startY, maxTextWidth, lineSpacing);
+    startY = wrapText(ctx, "• Prazo de Produção: 20 dias úteis a partir da validação digital do layout e pagamento do sinal de entrada.", 45, startY, maxTextWidth, lineSpacing);
+    wrapText(ctx, "• Condições de Frete: São Paulo Capital (CIF - Por nossa conta) | Grande SP e Outros Estados (FOB).", 45, startY, maxTextWidth, lineSpacing);
+    
+    let nomeAssinaturaVendedor = vendedor || 'Equipe Comercial Comvil';
+    ctx.fillStyle = "#777777"; ctx.font = "10px Arial"; ctx.textAlign = "center"; ctx.fillText("Documento emitido por: " + nomeAssinaturaVendedor + " em " + dataHoje.toLocaleDateString('pt-BR'), 300, 615);
+    
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(35, 635); ctx.lineTo(565, 635); ctx.stroke();
+    
+    ctx.fillStyle = "#0056b3"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center";
+    ctx.fillText("COMVIL BRINDES", 300, 665);
+    
+    ctx.fillStyle = "#555555"; ctx.font = "10px Arial";
+    ctx.fillText("CNPJ: 36.206.286/0001-03  |  ✉️ comvil@comvil.com.br", 300, 685);
+    
+    let stringTelefones = "☎️ Fixo: 11 3461-0813  |  📱 WhatsApp: 11 97024-3064";
+    if (telVendedor) {
+        stringTelefones += `  |  📞 Vendedor: ${telVendedor}`;
+    }
+    ctx.fillText(stringTelefones, 300, 703);
+
+    const novaAba = window.open("", "_blank");
+    if (novaAba) {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.98);
+        const nomeArquivo = `Orcamento_${numeroFinal}_${nome.replace(/\s+/g, '_')}.jpg`;
+        
+        const telefoneLimpo = telFormulario.replace(/\D/g, "");
+        let assinaturaMensagem = vendedor ? vendedor.trim() : "Comvil Brindes";
+        const msgTextoFormatado = `Olá, segue o orçamento solicitado Att ${assinaturaMensagem}.`;
+        const textoInjetado = encodeURIComponent(msgTextoFormatado);
+
+        novaAba.document.write(`
+            <html>
+            <head>
+                <title>Exportar Orçamento</title>
+                <style>
+                    body { margin:0; background:#333; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; font-family:Arial, sans-serif; padding: 20px 0; }
+                    img { max-width:95%; max-height:85vh; box-shadow:0 5px 25px rgba(0,0,0,0.5); background:white; margin-bottom: 20px; }
+                    .btn-container { width: 100%; display: flex; justify-content: center; gap: 15px; }
+                    .btn-download { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
+                    .btn-download:hover { background: #004085; }
+                    .btn-whatsapp { background: #25D366; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s; }
+                    .btn-whatsapp:hover { background: #128C7E; }
+                </style>
+            </head>
+            <body>
+                <img src="${dataUrl}" />
+                <div class="btn-container">
+                    <a href="${dataUrl}" download="${nomeArquivo}" class="btn-download">Baixar Imagem</a>
+                    <a href="https://api.whatsapp.com/send?phone=55` + telefoneLimpo + `&text=` + textoInjetado + `" target="_blank" class="btn-whatsapp">Abrir WhatsApp</a>
+                </div>
+            </body>
+            </html>
+        `);
+        novaAba.document.close();
+    }
+}
+
+function desenharCaixaPdf(ctx, x, y, w, h, titulo) {
+    ctx.fillStyle = "#fafafa"; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#dddddd"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = "#777777"; ctx.font = "bold 9px Arial"; ctx.textAlign = "left";
+    ctx.fillText(titulo.toUpperCase(), x + 15, y + 18);
+    ctx.strokeStyle = "#0056b3"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h); ctx.stroke();
+}
+</script>
+</body>
+</html>
